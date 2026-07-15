@@ -581,8 +581,8 @@ already green.
 
 ## 8. Open questions
 
-Decisions needed before or during the scaffold. Stated as questions;
-nothing below has been assumed.
+All nine were resolved on 2026-07-14; the questions are kept as asked,
+with the decision recorded under each in section 9.
 
 1. **Artifact output location.** Where do pipeline outputs live:
    `artifacts/<process-slug>/` at the repo root, committed to git (the
@@ -620,3 +620,30 @@ nothing below has been assumed.
    metadata (propose the current Sonnet as default with a
    `--model` override), and is `BP2UIP_PROVIDER` an acceptable env var
    for selecting the default provider?
+
+## 9. Decisions on the open questions (2026-07-14)
+
+1. **Artifact location.** `artifacts/<process-slug>/` at the repo
+   root, committed. The whole `estate.json` is also committed, under
+   `artifacts/estate/`. Committed artifacts are the demo.
+2. **Dashboard writeback.** Option (a): the dashboard shells out to
+   `bp2uip review --approve` via a Next.js route handler. Python
+   remains the only writer of specs and provenance; approval logic is
+   never reimplemented in TypeScript.
+3. **Approval identity.** Explicit `--by`, required on every approval,
+   no fallback to git config or environment variables. The dashboard
+   review screen passes a required reviewer name through to the CLI.
+4. **Layout.** src layout (`pipeline/src/bp2uip/`); the README
+   repository diagram was updated in the same commit.
+5. **License.** MIT.
+6. **Toolchain.** pnpm, Node 22 LTS in CI.
+7. **Provenance hash chain.** Shipped in v1. Committed artifacts are
+   never hand-edited; corrections are new events, changes come from
+   rerunning the pipeline.
+8. **DOCX.** pandoc with a committed reference.docx template for
+   styling; pandoc installed via apt in CI when week 5 needs it.
+   `docsgen` returns a markdown path plus an optional docx path.
+9. **LLM defaults.** Current Sonnet pinned as the default Anthropic
+   model with a `--model` override; the exact model string is recorded
+   in extraction metadata. `BP2UIP_PROVIDER` selects the default
+   provider and the CLI `--provider` flag wins when both are set.
