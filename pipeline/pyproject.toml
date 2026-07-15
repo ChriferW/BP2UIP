@@ -1,0 +1,34 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bp2uip"
+version = "0.1.0"
+description = "Migration compiler: Blue Prism release exports in, UiPath artifacts out, with provenance"
+requires-python = ">=3.12"
+license = "MIT"
+authors = [{ name = "Christopher Williams" }]
+dependencies = [
+    "pydantic>=2.7",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.5",
+    "jsonschema>=4.21",
+]
+
+[project.scripts]
+bp2uip = "bp2uip.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

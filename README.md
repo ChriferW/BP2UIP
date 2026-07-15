@@ -170,7 +170,7 @@ the honest account of what doesn't work.
 bp2uip/
 ├── README.md                        <- you are here
 ├── pipeline/                        Python: parser, intent, emitters, analysis
-│   ├── bp2uip/                      package source
+│   ├── src/bp2uip/                  package source
 │   ├── tests/
 │   └── pyproject.toml
 ├── dashboard/                       Next.js: estate explorer, intent review,
