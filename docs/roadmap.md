@@ -47,7 +47,9 @@ Visitor sees: green CI badge, tests, a real artifact schema forming.
 
 - Define the intent-spec format (`docs/intent-spec.md`): purpose, inputs,
   outputs, business rules, exception semantics, human touchpoints, with
-  every claim citing source stage IDs
+  every claim citing source stage IDs. Spec must be rich enough to drive
+  PDD/SDD generation in Week 5 (design for it now)
+- Spec lifecycle: draft -> approved. Nothing downstream runs on a draft
 - Pluggable LLM provider interface (Anthropic first, OpenAI stub)
 - Extraction pipeline: estate model chunk -> prompt -> validated intent spec
   (value-domain validation on the output, naturally)
@@ -76,19 +78,34 @@ Visitor sees: screenshots in the README, a dashboard taking shape.
 **Milestone check: end of Week 4 = Tier 1 substantially complete.**
 If behind, cut dashboard polish, never the provenance work.
 
-## Week 5: Provenance + intent review workflow
+## Week 5: Provenance, intent review gate, and PDD/SDD generation
 
-**Goal: the governance story becomes concrete.**
+**Goal: the governance story becomes concrete, and the tool starts
+producing the documents an RPA intake process actually requires.**
 
 - Append-only migration provenance record: source -> intent -> decisions,
   one record per process, schema documented
 - Dashboard intent-review screen: source stages and extracted spec side
-  by side, approve/annotate, approval recorded to provenance
-- Modernization report generator: per-process markdown/PDF summarizing
-  complexity, uplift findings, and migration recommendation
-- Run the full Tier 1 flow on the entire fixture estate; commit all artifacts
+  by side, confirm/correct/annotate per section; approval (who, when,
+  what changed) recorded to provenance. This is the gate: PDD, SDD, and
+  emitters all refuse to run on unapproved specs (CLI `--force` exists
+  for demos and is itself logged as an unreviewed generation)
+- **PDD generator**: as-is process document from parser output + approved
+  intent (purpose, trigger, inputs/outputs, current-state flow, business
+  rules, current exception handling, systems, human touchpoints).
+  Markdown + DOCX output
+- **SDD generator**: to-be design document from approved intent + emitter
+  plan (target UiPath architecture and why, queue/config design,
+  exception taxonomy mapping, per-step uplift decisions with reasoning,
+  human-build TODO list, provenance references). Markdown + DOCX output
+- Modernization report generator: per-process summary of complexity,
+  uplift findings, and migration recommendation
+- Run the full Tier 1 flow on the entire fixture estate; commit all
+  artifacts including generated PDDs/SDDs
 
-Visitor sees: the auditable-migration story working end to end.
+Visitor sees: point the tool at a legacy process, get back the two
+documents intake requires, pre-written and cited. The auditable-migration
+story working end to end.
 
 ## Week 6: The back end (emitters, Tier 2)
 
