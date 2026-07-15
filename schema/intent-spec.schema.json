@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ChriferW/BP2UIP/schema/intent-spec.schema.json",
+  "title": "Intent spec",
+  "description": "The IR: business intent extracted from one process. Lifecycle: draft, then approved. An approved spec must carry an approval record; a draft spec must not.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "spec_id",
+    "process_id",
+    "estate_ref",
+    "status",
+    "created_at",
+    "extraction",
+    "purpose",
+    "inputs",
+    "outputs",
+    "business_rules",
+    "exception_semantics",
+    "human_touchpoints",
+    "approval"
+  ],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "spec_id": { "type": "string" },
+    "process_id": { "type": "string" },
+    "estate_ref": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string" },
+        "sha256": { "type": "string" }
+      }
+    },
+    "status": { "type": "string", "enum": ["draft", "approved"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "extraction": {
+      "type": "object",
+      "required": ["provider", "model", "prompt_version"],
+      "properties": {
+        "provider": { "type": "string" },
+        "model": { "type": "string" },
+        "prompt_version": { "type": "string" }
+      }
+    },
+    "purpose": {
+      "type": "object",
+      "required": ["text", "citations"],
+      "properties": {
+        "text": { "type": "string" },
+        "citations": { "$ref": "#/$defs/citations" }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "description", "citations"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "source": { "type": "string" },
+          "citations": { "$ref": "#/$defs/citations" }
+        }
+      }
+    },
+    "outputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "description", "citations"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "destination": { "type": "string" },
+          "citations": { "$ref": "#/$defs/citations" }
+        }
+      }
+    },
+    "business_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "statement", "citations"],
+        "properties": {
+          "id": { "type": "string" },
+          "statement": { "type": "string" },
+          "citations": { "$ref": "#/$defs/citations" }
+        }
+      }
+    },
+    "exception_semantics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["condition", "current_handling", "citations"],
+        "properties": {
+          "condition": { "type": "string" },
+          "current_handling": { "type": "string" },
+          "citations": { "$ref": "#/$defs/citations" }
+        }
+      }
+    },
+    "human_touchpoints": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["description", "citations"],
+        "properties": {
+          "description": { "type": "string" },
+          "citations": { "$ref": "#/$defs/citations" }
+        }
+      }
+    },
+    "approval": {
+      "oneOf": [{ "type": "null" }, { "$ref": "#/$defs/approval" }]
+    }
+  },
+  "if": {
+    "properties": { "status": { "const": "approved" } },
+    "required": ["status"]
+  },
+  "then": {
+    "properties": { "approval": { "$ref": "#/$defs/approval" } }
+  },
+  "else": {
+    "properties": { "approval": { "const": null } }
+  },
+  "$defs": {
+    "citations": {
+      "type": "array",
+      "description": "Stage IDs in the referenced estate document. Existence of each ID is checked by the pipeline (intent.validate_spec), not by this schema.",
+      "items": { "type": "string" }
+    },
+    "approval": {
+      "type": "object",
+      "required": ["approved_by", "approved_at", "changes"],
+      "properties": {
+        "approved_by": { "type": "string", "minLength": 1 },
+        "approved_at": { "type": "string", "format": "date-time" },
+        "changes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["section", "before", "after"],
+            "properties": {
+              "section": { "type": "string" },
+              "before": { "type": "string" },
+              "after": { "type": "string" },
+              "note": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

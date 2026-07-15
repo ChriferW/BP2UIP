@@ -1,0 +1,83 @@
+{
+  "schema_version": "0.1.0",
+  "source": {
+    "files": [
+      {
+        "path": "fixtures/meridian-dispute-intake.bprelease",
+        "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    ],
+    "parsed_at": "2026-07-20T00:00:00Z",
+    "parser_version": "0.1.0"
+  },
+  "processes": [
+    {
+      "id": "proc-dispute-intake",
+      "name": "Dispute Intake",
+      "description": "Example document for schema validation. Not a real parse result.",
+      "stages": [
+        {
+          "id": "stage-001",
+          "name": "Start",
+          "type": "start",
+          "raw_type": "example",
+          "properties": {}
+        },
+        {
+          "id": "stage-002",
+          "name": "Amount over threshold?",
+          "type": "decision",
+          "raw_type": "example",
+          "properties": {}
+        },
+        {
+          "id": "stage-003",
+          "name": "End",
+          "type": "end",
+          "raw_type": "example",
+          "properties": {}
+        }
+      ],
+      "data_items": [
+        {
+          "id": "data-001",
+          "name": "DisputeAmount",
+          "data_type": "number",
+          "initial_value": null
+        }
+      ],
+      "links": [
+        { "from_stage": "stage-001", "to_stage": "stage-002", "label": null },
+        { "from_stage": "stage-002", "to_stage": "stage-003", "label": "No" }
+      ],
+      "exception_blocks": [
+        {
+          "id": "exc-001",
+          "covers_stages": ["stage-002"],
+          "handler_stage": "stage-003"
+        }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "id": "obj-core-banking",
+      "name": "Core Banking",
+      "actions": [
+        {
+          "id": "action-lookup-account",
+          "name": "Lookup Account",
+          "stages": []
+        }
+      ]
+    }
+  ],
+  "queues": [{ "id": "queue-disputes", "name": "Disputes" }],
+  "unparsed": [
+    {
+      "element": "example-element",
+      "location": "fixtures/meridian-dispute-intake.bprelease",
+      "note": "example entry showing the honesty mechanism shape"
+    }
+  ]
+}

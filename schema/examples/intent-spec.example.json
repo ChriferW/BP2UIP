@@ -1,0 +1,68 @@
+{
+  "schema_version": "0.1.0",
+  "spec_id": "spec-dispute-intake-001",
+  "process_id": "proc-dispute-intake",
+  "estate_ref": {
+    "path": "artifacts/estate/estate.json",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "status": "approved",
+  "created_at": "2026-07-20T00:00:00Z",
+  "extraction": {
+    "provider": "anthropic",
+    "model": "example-model-string",
+    "prompt_version": "0.1.0"
+  },
+  "purpose": {
+    "text": "Example document for schema validation. Not a real extraction.",
+    "citations": ["stage-001"]
+  },
+  "inputs": [
+    {
+      "name": "DisputeAmount",
+      "description": "Amount of the disputed transaction.",
+      "source": "queue item",
+      "citations": ["stage-001"]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "DispositionCode",
+      "description": "Routing decision for the dispute.",
+      "destination": "case system",
+      "citations": ["stage-002"]
+    }
+  ],
+  "business_rules": [
+    {
+      "id": "BR-1",
+      "statement": "Disputes over the threshold route to manual review.",
+      "citations": ["stage-002"]
+    }
+  ],
+  "exception_semantics": [
+    {
+      "condition": "Account lookup fails.",
+      "current_handling": "Item marked as exception and retried.",
+      "citations": ["stage-002"]
+    }
+  ],
+  "human_touchpoints": [
+    {
+      "description": "Manual review of over-threshold disputes.",
+      "citations": ["stage-002"]
+    }
+  ],
+  "approval": {
+    "approved_by": "Example Reviewer",
+    "approved_at": "2026-07-21T00:00:00Z",
+    "changes": [
+      {
+        "section": "business_rules",
+        "before": "example before text",
+        "after": "example after text",
+        "note": "example correction"
+      }
+    ]
+  }
+}

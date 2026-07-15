@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ChriferW/BP2UIP/schema/estate.schema.json",
+  "title": "Estate model",
+  "description": "Platform-neutral output of the parser. One document per parse run, covering the whole estate. Draft contract: fields may be added when real fixtures arrive; renames are breaking.",
+  "type": "object",
+  "required": ["schema_version", "source", "processes", "objects", "queues", "unparsed"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "source": {
+      "type": "object",
+      "required": ["files", "parsed_at", "parser_version"],
+      "properties": {
+        "files": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["path", "sha256"],
+            "properties": {
+              "path": { "type": "string" },
+              "sha256": { "type": "string" }
+            }
+          }
+        },
+        "parsed_at": { "type": "string", "format": "date-time" },
+        "parser_version": { "type": "string" }
+      }
+    },
+    "processes": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/process" }
+    },
+    "objects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "actions"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["id", "name", "stages"],
+              "properties": {
+                "id": { "type": "string" },
+                "name": { "type": "string" },
+                "stages": { "type": "array", "items": { "$ref": "#/$defs/stage" } }
+              }
+            }
+          }
+        }
+      }
+    },
+    "queues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" }
+        }
+      }
+    },
+    "unparsed": {
+      "type": "array",
+      "description": "Elements the parser saw but did not understand. Honesty mechanism: this list is part of the contract.",
+      "items": {
+        "type": "object",
+        "required": ["element", "location", "note"],
+        "properties": {
+          "element": { "type": "string" },
+          "location": { "type": "string" },
+          "note": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "stage": {
+      "type": "object",
+      "required": ["id", "name", "type", "raw_type"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": {
+          "type": "string",
+          "description": "Normalized stage type. Provisional until the week 1 XML skim; raw_type preserves the verbatim source string.",
+          "enum": [
+            "decision",
+            "calculation",
+            "action",
+            "loop_start",
+            "loop_end",
+            "exception",
+            "subprocess_call",
+            "queue_read",
+            "queue_write",
+            "note",
+            "start",
+            "end",
+            "unknown"
+          ]
+        },
+        "raw_type": { "type": "string" },
+        "properties": { "type": "object" }
+      }
+    },
+    "process": {
+      "type": "object",
+      "required": ["id", "name", "stages", "data_items", "links", "exception_blocks"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "stages": { "type": "array", "items": { "$ref": "#/$defs/stage" } },
+        "data_items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "name", "data_type"],
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "data_type": { "type": "string" },
+              "initial_value": {}
+            }
+          }
+        },
+        "links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["from_stage", "to_stage"],
+            "properties": {
+              "from_stage": { "type": "string" },
+              "to_stage": { "type": "string" },
+              "label": { "type": ["string", "null"] }
+            }
+          }
+        },
+        "exception_blocks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["id", "covers_stages", "handler_stage"],
+            "properties": {
+              "id": { "type": "string" },
+              "covers_stages": { "type": "array", "items": { "type": "string" } },
+              "handler_stage": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

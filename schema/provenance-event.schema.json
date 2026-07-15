@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ChriferW/BP2UIP/schema/provenance-event.schema.json",
+  "title": "Provenance event",
+  "description": "One line of a per-process JSON Lines provenance log. The log is append-only: events are never edited or deleted, corrections are new events. Each event carries the sha256 of the previous line, forming a verifiable chain.",
+  "type": "object",
+  "required": ["schema_version", "process_id", "seq", "prev_hash", "timestamp", "actor", "event", "detail"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "process_id": { "type": "string" },
+    "seq": { "type": "integer", "minimum": 1 },
+    "prev_hash": {
+      "type": ["string", "null"],
+      "description": "sha256 hex digest of the previous line's exact bytes; null for seq 1."
+    },
+    "timestamp": { "type": "string", "format": "date-time" },
+    "actor": { "type": "string", "minLength": 1 },
+    "event": {
+      "type": "string",
+      "description": "Event vocabulary is extensible; additions are non-breaking.",
+      "enum": [
+        "parsed",
+        "extraction_run",
+        "spec_drafted",
+        "spec_corrected",
+        "spec_approved",
+        "generation",
+        "unreviewed_generation",
+        "report_generated"
+      ]
+    },
+    "detail": { "type": "object" }
+  }
+}

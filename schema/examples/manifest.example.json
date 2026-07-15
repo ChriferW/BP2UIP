@@ -1,0 +1,24 @@
+{
+  "schema_version": "0.1.0",
+  "process_id": "proc-dispute-intake",
+  "process_name": "Dispute Intake",
+  "generated_at": "2026-07-22T00:00:00Z",
+  "pipeline_version": "0.1.0",
+  "artifacts": {
+    "estate": {
+      "path": "artifacts/estate/estate.json",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "schema_version": "0.1.0"
+    },
+    "intent_spec": {
+      "path": "artifacts/dispute-intake/intent-spec.json",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "schema_version": "0.1.0",
+      "status": "approved"
+    },
+    "provenance": {
+      "path": "artifacts/dispute-intake/provenance.jsonl",
+      "events": 2
+    }
+  }
+}

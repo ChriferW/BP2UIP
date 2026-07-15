@@ -1,0 +1,18 @@
+{
+  "schema_version": "0.1.0",
+  "process_id": "proc-dispute-intake",
+  "spec_ref": {
+    "spec_id": "spec-dispute-intake-001",
+    "status_at_analysis": "approved"
+  },
+  "analyzed_at": "2026-07-22T00:00:00Z",
+  "findings": [
+    {
+      "id": "UF-1",
+      "stage_ids": ["stage-002"],
+      "classification": "KEEP_DETERMINISTIC",
+      "reasoning": "Threshold comparison is policy-unambiguous; judgment does not change the outcome.",
+      "criteria": ["UC-1"]
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ChriferW/BP2UIP/schema/manifest.schema.json",
+  "title": "Process manifest",
+  "description": "The index tying one process's artifacts together. Regenerated whenever an artifact for the process is produced. Absent artifacts are absent keys; the manifest never claims an artifact that does not exist on disk.",
+  "type": "object",
+  "required": ["schema_version", "process_id", "process_name", "generated_at", "pipeline_version", "artifacts"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "process_id": { "type": "string" },
+    "process_name": { "type": "string" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "pipeline_version": { "type": "string" },
+    "artifacts": {
+      "type": "object",
+      "properties": {
+        "estate": { "$ref": "#/$defs/file_ref_versioned" },
+        "intent_spec": {
+          "allOf": [{ "$ref": "#/$defs/file_ref_versioned" }],
+          "properties": {
+            "status": { "type": "string", "enum": ["draft", "approved"] }
+          },
+          "required": ["status"]
+        },
+        "uplift": { "$ref": "#/$defs/file_ref_versioned" },
+        "provenance": {
+          "type": "object",
+          "required": ["path", "events"],
+          "properties": {
+            "path": { "type": "string" },
+            "events": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "pdd": { "$ref": "#/$defs/file_ref" },
+        "sdd": { "$ref": "#/$defs/file_ref" },
+        "emitted": {
+          "type": "array",
+          "items": {
+            "allOf": [{ "$ref": "#/$defs/file_ref" }],
+            "properties": {
+              "kind": { "type": "string", "enum": ["xaml", "bpmn", "config", "queue_manifest"] }
+            },
+            "required": ["kind"]
+          }
+        },
+        "report": { "$ref": "#/$defs/file_ref" }
+      }
+    }
+  },
+  "$defs": {
+    "file_ref": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string" },
+        "sha256": { "type": "string" }
+      }
+    },
+    "file_ref_versioned": {
+      "type": "object",
+      "required": ["path", "sha256", "schema_version"],
+      "properties": {
+        "path": { "type": "string" },
+        "sha256": { "type": "string" },
+        "schema_version": { "type": "string" }
+      }
+    }
+  }
+}

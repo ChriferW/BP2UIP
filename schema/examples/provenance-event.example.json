@@ -1,0 +1,13 @@
+{
+  "schema_version": "0.1.0",
+  "process_id": "proc-dispute-intake",
+  "seq": 2,
+  "prev_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+  "timestamp": "2026-07-21T00:00:00Z",
+  "actor": "Example Reviewer",
+  "event": "spec_approved",
+  "detail": {
+    "spec_id": "spec-dispute-intake-001",
+    "changes": 1
+  }
+}
