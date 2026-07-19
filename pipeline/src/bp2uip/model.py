@@ -41,10 +41,14 @@ StageType = Literal[
     "loop_start",
     "loop_end",
     "exception",
+    "block",
+    "recover",
+    "resume",
     "subprocess_call",
     "queue_read",
     "queue_write",
     "note",
+    "data",
     "start",
     "end",
     "unknown",
@@ -114,6 +118,8 @@ class EstateObject(BaseModel):
 class Queue(BaseModel):
     id: str
     name: str
+    key_field: str | None = None
+    max_attempts: int | None = None
 
 
 class UnparsedElement(BaseModel):

@@ -3,19 +3,25 @@
   "language": "en",
   "words": [
     "agentic",
+    "appdef",
     "bpmn",
     "bprelease",
     "bp2uip",
     "classmethod",
+    "dedup",
     "docsgen",
     "hatchling",
+    "Initialise",
     "jsonschema",
     "lxml",
     "metaschema",
+    "onfalse",
+    "ontrue",
     "pandoc",
     "pydantic",
     "pyproject",
     "pytest",
+    "pythonpath",
     "reframework",
     "touchpoint",
     "touchpoints",
@@ -23,7 +29,11 @@
     "unparsed",
     "unreviewed",
     "uplift",
+    "venv",
     "writeback",
     "xaml"
+  ],
+  "ignoreWords": [
+    "Dsipute"
   ]
 }

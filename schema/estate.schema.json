@@ -60,7 +60,9 @@
         "required": ["id", "name"],
         "properties": {
           "id": { "type": "string" },
-          "name": { "type": "string" }
+          "name": { "type": "string" },
+          "key_field": { "type": ["string", "null"] },
+          "max_attempts": { "type": ["integer", "null"] }
         }
       }
     },
@@ -87,7 +89,7 @@
         "name": { "type": "string" },
         "type": {
           "type": "string",
-          "description": "Normalized stage type. Provisional until the week 1 XML skim; raw_type preserves the verbatim source string.",
+          "description": "Normalized stage type, established against the week 1 fixture exports; raw_type preserves the verbatim source string.",
           "enum": [
             "decision",
             "calculation",
@@ -95,10 +97,14 @@
             "loop_start",
             "loop_end",
             "exception",
+            "block",
+            "recover",
+            "resume",
             "subprocess_call",
             "queue_read",
             "queue_write",
             "note",
+            "data",
             "start",
             "end",
             "unknown"

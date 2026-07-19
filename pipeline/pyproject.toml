@@ -25,6 +25,9 @@ bp2uip = "bp2uip.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# pythonpath, not just the editable install: on this Mac the venv's .pth
+# file keeps acquiring the macOS hidden flag, which Python skips.
+pythonpath = ["src"]
 
 [tool.ruff]
 line-length = 100

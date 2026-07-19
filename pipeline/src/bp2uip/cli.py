@@ -1,20 +1,38 @@
 """The bp2uip command line interface.
 
-Every subcommand is currently a stub: it parses its arguments, states
-what it will do and which roadmap week implements it, and exits 0. No
-fake output, no fake progress.
+`parse` is implemented (roadmap week 2). Every other subcommand is
+still a stub: it parses its arguments, states what it will do and
+which roadmap week implements it, and exits 0. No fake output, no
+fake progress.
 """
 
 import argparse
+import json
 from collections.abc import Sequence
+from pathlib import Path
+
+from bp2uip.model import to_document
+from bp2uip.parser import ParseError, parse_release
 
 
 def _cmd_parse(args: argparse.Namespace) -> int:
+    try:
+        estate = parse_release([Path(p) for p in args.fixtures])
+    except ParseError as exc:
+        print(f"parse: {exc}")
+        return 1
+    out_path = Path(args.out) / "estate" / "estate.json"
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(to_document(estate), indent=2) + "\n", encoding="utf-8")
     print(
-        f"parse: not implemented yet (roadmap week 2). Will parse "
-        f"{len(args.fixtures)} file(s) into the estate model at "
-        f"{args.out}/estate/estate.json."
+        f"parse: {len(estate.processes)} process(es), {len(estate.objects)} object(s), "
+        f"{len(estate.queues)} queue(s) from {len(estate.source.files)} file(s) "
+        f"-> {out_path}"
     )
+    if estate.unparsed:
+        print(f"parse: {len(estate.unparsed)} unparsed element(s) recorded in the estate model:")
+        for entry in estate.unparsed:
+            print(f"  {entry.element} at {entry.location}: {entry.note}")
     return 0
 
 
