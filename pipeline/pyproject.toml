@@ -11,6 +11,8 @@ license = "MIT"
 authors = [{ name = "Christopher Williams" }]
 dependencies = [
     "pydantic>=2.7",
+    "anthropic>=0.40",
+    "python-dotenv>=1.0",
 ]
 
 [project.optional-dependencies]

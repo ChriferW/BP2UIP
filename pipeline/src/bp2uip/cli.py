@@ -1,18 +1,25 @@
 """The bp2uip command line interface.
 
-`parse` is implemented (roadmap week 2). Every other subcommand is
-still a stub: it parses its arguments, states what it will do and
-which roadmap week implements it, and exits 0. No fake output, no
-fake progress.
+`parse` (roadmap week 2), `extract`, and `review` (roadmap week 3) are
+implemented. Every other subcommand is still a stub: it parses its
+arguments, states what it will do and which roadmap week implements
+it, and exits 0. No fake output, no fake progress.
 """
 
 import argparse
+import hashlib
 import json
+import re
 from collections.abc import Sequence
 from pathlib import Path
 
-from bp2uip.model import to_document
+from dotenv import find_dotenv, load_dotenv
+
+from bp2uip.intent import ExtractionError, approve_spec, extract_intent, find_process
+from bp2uip.model import Estate, EstateRef, IntentSpec, to_document
 from bp2uip.parser import ParseError, parse_release
+from bp2uip.provenance import ProvenanceLog
+from bp2uip.providers import ProviderConfigError, get_provider
 
 
 def _cmd_parse(args: argparse.Namespace) -> int:
@@ -36,28 +43,108 @@ def _cmd_parse(args: argparse.Namespace) -> int:
     return 0
 
 
+def _slug(name: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-")
+
+
 def _cmd_extract(args: argparse.Namespace) -> int:
-    provider = args.provider or "anthropic (default, or BP2UIP_PROVIDER)"
-    print(
-        f"extract: not implemented yet (roadmap week 3). Will extract a draft "
-        f"intent spec for process '{args.process}' via provider {provider} "
-        f"and write it under artifacts/."
+    estate_path = Path(args.estate)
+    if not estate_path.exists():
+        print(f"extract: estate document not found at {estate_path}; run `bp2uip parse` first")
+        return 1
+    raw = estate_path.read_bytes()
+    estate = Estate.model_validate_json(raw)
+    estate_ref = EstateRef(path=str(estate_path), sha256=hashlib.sha256(raw).hexdigest())
+    try:
+        provider = get_provider(args.provider, model=args.model)
+        spec = extract_intent(estate, args.process, provider, estate_ref=estate_ref)
+    except (ProviderConfigError, ExtractionError) as exc:
+        print(f"extract: {exc}")
+        return 1
+    process = find_process(estate, args.process)
+    out_dir = Path(args.out) / _slug(process.name)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    spec_path = out_dir / "intent-spec.json"
+    spec_path.write_text(json.dumps(to_document(spec), indent=2) + "\n", encoding="utf-8")
+    log = ProvenanceLog.open(out_dir / "provenance.jsonl", process.id)
+    log.append(
+        actor=f"bp2uip/{provider.name}",
+        event="extraction_run",
+        detail={
+            "provider": spec.extraction.provider,
+            "model": spec.extraction.model,
+            "prompt_version": spec.extraction.prompt_version,
+        },
     )
+    log.append(
+        actor=f"bp2uip/{provider.name}",
+        event="spec_drafted",
+        detail={"spec_id": spec.spec_id, "path": str(spec_path)},
+    )
+    print(
+        f"extract: draft spec {spec.spec_id} for '{process.name}' "
+        f"({spec.extraction.provider}/{spec.extraction.model}, "
+        f"prompt v{spec.extraction.prompt_version}) -> {spec_path}"
+    )
+    print(f"extract: review it with `bp2uip review {spec_path}`")
     return 0
 
 
+def _print_cited(indent: str, citations: list[str]) -> None:
+    print(f"{indent}cites: {', '.join(citations)}")
+
+
 def _cmd_review(args: argparse.Namespace) -> int:
+    spec_path = Path(args.spec)
+    if not spec_path.exists():
+        print(f"review: spec not found at {spec_path}")
+        return 1
+    spec = IntentSpec.model_validate_json(spec_path.read_text(encoding="utf-8"))
+
     if args.approve:
-        print(
-            f"review: not implemented yet (roadmap week 3). Will approve spec "
-            f"'{args.spec}' as reviewed by '{args.by}', record a spec_approved "
-            f"event to provenance, and write the approved spec."
-        )
+        log = ProvenanceLog.open(spec_path.parent / "provenance.jsonl", spec.process_id)
+        try:
+            approved = approve_spec(spec, approved_by=args.by, log=log)
+        except ValueError as exc:
+            print(f"review: {exc}")
+            return 1
+        spec_path.write_text(json.dumps(to_document(approved), indent=2) + "\n", encoding="utf-8")
+        print(f"review: spec {approved.spec_id} approved by {args.by} -> {spec_path}")
+        return 0
+
+    print(f"spec {spec.spec_id} for process {spec.process_id} [{spec.status}]")
+    print(
+        f"extracted by {spec.extraction.provider}/{spec.extraction.model} "
+        f"(prompt v{spec.extraction.prompt_version})"
+    )
+    print(f"\npurpose: {spec.purpose.text}")
+    _print_cited("  ", spec.purpose.citations)
+    print("\ninputs:")
+    for item in spec.inputs:
+        source = f" (from {item.source})" if item.source else ""
+        print(f"  - {item.name}: {item.description}{source}")
+        _print_cited("    ", item.citations)
+    print("\noutputs:")
+    for item in spec.outputs:
+        destination = f" (to {item.destination})" if item.destination else ""
+        print(f"  - {item.name}: {item.description}{destination}")
+        _print_cited("    ", item.citations)
+    print("\nbusiness rules:")
+    for rule in spec.business_rules:
+        print(f"  - {rule.id}: {rule.statement}")
+        _print_cited("    ", rule.citations)
+    print("\nexception semantics:")
+    for semantic in spec.exception_semantics:
+        print(f"  - when {semantic.condition}: {semantic.current_handling}")
+        _print_cited("    ", semantic.citations)
+    print("\nhuman touchpoints:")
+    for touchpoint in spec.human_touchpoints:
+        print(f"  - {touchpoint.description}")
+        _print_cited("    ", touchpoint.citations)
+    if spec.approval:
+        print(f"\napproved by {spec.approval.approved_by} at {spec.approval.approved_at}")
     else:
-        print(
-            f"review: not implemented yet (roadmap week 3). Will display spec "
-            f"'{args.spec}' with its source stage citations for review."
-        )
+        print("\nnot yet approved; approve with --approve --by <reviewer>")
     return 0
 
 
@@ -112,6 +199,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("process", help="process ID or name")
     p.add_argument("--provider", help="LLM provider (overrides BP2UIP_PROVIDER)")
     p.add_argument("--model", help="model override; the exact string is recorded in the spec")
+    p.add_argument(
+        "--estate",
+        default="artifacts/estate/estate.json",
+        help="estate document produced by `bp2uip parse`",
+    )
+    p.add_argument("-o", "--out", default="artifacts", help="artifact output directory")
     p.set_defaults(func=_cmd_extract)
 
     p = sub.add_parser("review", help="review or approve an intent spec")
@@ -141,6 +234,11 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    # Populate the environment from a local gitignored .env if one
+    # exists (searched upward from the current directory). The code
+    # itself still only ever reads environment variables; a variable
+    # already set in the environment wins over the file.
+    load_dotenv(find_dotenv(usecwd=True))
     parser = build_parser()
     args = parser.parse_args(argv)
     if args.command == "review" and args.approve and not args.by:
