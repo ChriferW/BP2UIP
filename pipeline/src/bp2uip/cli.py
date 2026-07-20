@@ -20,6 +20,7 @@ from bp2uip.model import Estate, EstateRef, IntentSpec, to_document
 from bp2uip.parser import ParseError, parse_release
 from bp2uip.provenance import ProvenanceLog
 from bp2uip.providers import ProviderConfigError, get_provider
+from bp2uip.render import spec_to_markdown
 
 
 def _cmd_parse(args: argparse.Namespace) -> int:
@@ -66,6 +67,7 @@ def _cmd_extract(args: argparse.Namespace) -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
     spec_path = out_dir / "intent-spec.json"
     spec_path.write_text(json.dumps(to_document(spec), indent=2) + "\n", encoding="utf-8")
+    (out_dir / "intent-spec.md").write_text(spec_to_markdown(spec, estate), encoding="utf-8")
     log = ProvenanceLog.open(out_dir / "provenance.jsonl", process.id)
     log.append(
         actor=f"bp2uip/{provider.name}",
@@ -109,6 +111,15 @@ def _cmd_review(args: argparse.Namespace) -> int:
             print(f"review: {exc}")
             return 1
         spec_path.write_text(json.dumps(to_document(approved), indent=2) + "\n", encoding="utf-8")
+        # Refresh the derived markdown view. Stage names need the estate;
+        # if it is gone, the rendering falls back to raw ids.
+        estate_path = Path(approved.estate_ref.path)
+        estate = (
+            Estate.model_validate_json(estate_path.read_bytes()) if estate_path.exists() else None
+        )
+        (spec_path.parent / "intent-spec.md").write_text(
+            spec_to_markdown(approved, estate), encoding="utf-8"
+        )
         print(f"review: spec {approved.spec_id} approved by {args.by} -> {spec_path}")
         return 0
 

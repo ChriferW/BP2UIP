@@ -1,0 +1,86 @@
+{
+  "schema_version": "0.1.0",
+  "spec_id": "spec-431cbc7f-25f9-4975-8981-72107f1f5288",
+  "process_id": "431cbc7f-25f9-4975-8981-72107f1f5288",
+  "estate_ref": {
+    "path": "artifacts/estate/estate.json",
+    "sha256": "040a1a59dd7e0dd2ad45b786124ef6879c1c0bdffacd3a1c95f998c7a0949795"
+  },
+  "status": "approved",
+  "created_at": "2026-07-20T20:09:24.754272+00:00",
+  "extraction": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-5",
+    "prompt_version": "0.1.0"
+  },
+  "purpose": {
+    "text": "This process automates changing a customer's address by first verifying that the associated bank account is active, and only proceeding to update the account's status if that condition holds; it exists to prevent address changes being applied against accounts that are not in an active state.",
+    "citations": [
+      "cce2fb95-691b-4761-82e8-a83aa6fd24de",
+      "37469893-2410-4697-b0ae-98f5eca3bba9",
+      "a8383ddf-1f30-47f8-bf8f-d9088ee41589"
+    ]
+  },
+  "inputs": [
+    {
+      "name": "AccountNumber",
+      "description": "Identifier of the customer's account for which the address change is being processed.",
+      "source": "Process Start stage input",
+      "citations": [
+        "7b1e2cff-2fec-4902-b79b-e46d5871d470"
+      ]
+    },
+    {
+      "name": "NewAddress",
+      "description": "The new address value supplied for the account.",
+      "source": "Process Start stage input",
+      "citations": [
+        "7b1e2cff-2fec-4902-b79b-e46d5871d470"
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "Success",
+      "description": "Flag indicating whether the account status update succeeded.",
+      "destination": "Returned by process End stage to the calling process/system",
+      "citations": [
+        "2ff64eef-22cf-4cfe-8404-531219993c92",
+        "a8383ddf-1f30-47f8-bf8f-d9088ee41589"
+      ]
+    }
+  ],
+  "business_rules": [
+    {
+      "id": "BR-1",
+      "statement": "Address changes require the account to be active before any update is performed.",
+      "citations": [
+        "c1c3d5ad-3583-468f-b193-352b08a64790",
+        "37469893-2410-4697-b0ae-98f5eca3bba9"
+      ]
+    },
+    {
+      "id": "BR-2",
+      "statement": "When the account is active, the account status is set to 'Updated' as part of processing the address change.",
+      "citations": [
+        "a8383ddf-1f30-47f8-bf8f-d9088ee41589"
+      ]
+    }
+  ],
+  "exception_semantics": [
+    {
+      "condition": "The looked-up account status is not 'Active'.",
+      "current_handling": "The process throws a Business Exception with the detail 'Account not active', halting further processing.",
+      "citations": [
+        "37469893-2410-4697-b0ae-98f5eca3bba9",
+        "06e4ef70-e047-413b-a8ae-58edc178fb2b"
+      ]
+    }
+  ],
+  "human_touchpoints": [],
+  "approval": {
+    "approved_by": "Chris Williams",
+    "approved_at": "2026-07-20T20:11:07.140737+00:00",
+    "changes": []
+  }
+}

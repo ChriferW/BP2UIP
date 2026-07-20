@@ -1,0 +1,85 @@
+{
+  "schema_version": "0.1.0",
+  "spec_id": "spec-21af9fee-0485-43b2-bde7-9a07a1ee017b",
+  "process_id": "21af9fee-0485-43b2-bde7-9a07a1ee017b",
+  "estate_ref": {
+    "path": "artifacts/estate/estate.json",
+    "sha256": "040a1a59dd7e0dd2ad45b786124ef6879c1c0bdffacd3a1c95f998c7a0949795"
+  },
+  "status": "approved",
+  "created_at": "2026-07-20T19:56:45.419376+00:00",
+  "extraction": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-5",
+    "prompt_version": "0.1.0"
+  },
+  "purpose": {
+    "text": "This process feeds a batch of dispute transactions into the 'Q-Disputes' work queue so that they can be worked downstream (e.g., by a case-handling or investigation process). It iterates over a collection of disputes, stages each dispute's key fields, and loads each one into the queue, tracking how many items were successfully loaded.",
+    "citations": [
+      "7282aa16-ec45-4a17-a07e-b54a66248ec6",
+      "894d2ad9-43a3-4aaf-b8c5-2619419e2ffb",
+      "f58ec21b-4339-435b-b9b0-2515ddcfbdfd"
+    ]
+  },
+  "inputs": [
+    {
+      "name": "Disputes",
+      "description": "Collection of dispute records to be loaded, each with a dispute reference, account number, dispute amount, and transaction date.",
+      "source": "Pre-populated data item (collection) within the process, presumably sourced upstream from a case management or transaction system",
+      "citations": [
+        "7282aa16-ec45-4a17-a07e-b54a66248ec6"
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "Q-Disputes queue items",
+      "description": "Each dispute record is added as an item to the Q-Disputes work queue for downstream processing.",
+      "destination": "Q-Disputes work queue",
+      "citations": [
+        "894d2ad9-43a3-4aaf-b8c5-2619419e2ffb"
+      ]
+    },
+    {
+      "name": "ItemCount",
+      "description": "Total count of dispute items successfully loaded into the queue during this run, returned as a process output.",
+      "destination": "Process output (End stage)",
+      "citations": [
+        "c0c12f1b-b238-4b65-af38-27b15026a079",
+        "f58ec21b-4339-435b-b9b0-2515ddcfbdfd"
+      ]
+    }
+  ],
+  "business_rules": [
+    {
+      "id": "BR-1",
+      "statement": "Every dispute in the input collection must be added to the Q-Disputes work queue for downstream handling.",
+      "citations": [
+        "7282aa16-ec45-4a17-a07e-b54a66248ec6",
+        "894d2ad9-43a3-4aaf-b8c5-2619419e2ffb"
+      ]
+    },
+    {
+      "id": "BR-2",
+      "statement": "Each queue item must carry the dispute reference, account number, dispute amount, and transaction date.",
+      "citations": [
+        "3bb33f23-6442-446c-b9e0-dcc6cffd2fe5"
+      ]
+    },
+    {
+      "id": "BR-3",
+      "statement": "The process must report the number of dispute items loaded into the queue as an output.",
+      "citations": [
+        "f58ec21b-4339-435b-b9b0-2515ddcfbdfd",
+        "c0c12f1b-b238-4b65-af38-27b15026a079"
+      ]
+    }
+  ],
+  "exception_semantics": [],
+  "human_touchpoints": [],
+  "approval": {
+    "approved_by": "Chris Williams",
+    "approved_at": "2026-07-20T20:14:12.670259+00:00",
+    "changes": []
+  }
+}

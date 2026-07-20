@@ -1,0 +1,2159 @@
+{
+  "schema_version": "0.1.0",
+  "source": {
+    "files": [
+      {
+        "path": "fixtures/meridian-estate.bprelease",
+        "sha256": "1446f3d8ef63c16e2d86660d926cd79beefdb48b9530aaf617acc948623fa4ea"
+      }
+    ],
+    "parsed_at": "2026-07-20T19:55:27.327076+00:00",
+    "parser_version": "0.1.0"
+  },
+  "processes": [
+    {
+      "id": "431cbc7f-25f9-4975-8981-72107f1f5288",
+      "name": "MFG - Address Change",
+      "description": "",
+      "stages": [
+        {
+          "id": "7b1e2cff-2fec-4902-b79b-e46d5871d470",
+          "name": "Start",
+          "type": "start",
+          "raw_type": "Start",
+          "properties": {
+            "inputs": [
+              {
+                "name": "AccountNumber",
+                "type": "text",
+                "store_in": "AccountNumber"
+              },
+              {
+                "name": "NewAddress",
+                "type": "text",
+                "store_in": "NewAddress"
+              }
+            ]
+          }
+        },
+        {
+          "id": "2ff64eef-22cf-4cfe-8404-531219993c92",
+          "name": "End",
+          "type": "end",
+          "raw_type": "End",
+          "properties": {
+            "outputs": [
+              {
+                "name": "Success",
+                "type": "flag",
+                "from": "Success"
+              }
+            ]
+          }
+        },
+        {
+          "id": "c1c3d5ad-3583-468f-b193-352b08a64790",
+          "name": "Note1",
+          "type": "note",
+          "raw_type": "Note",
+          "properties": {
+            "narrative": "Address changes require an active account"
+          }
+        },
+        {
+          "id": "cce2fb95-691b-4761-82e8-a83aa6fd24de",
+          "name": "Lookup Account",
+          "type": "action",
+          "raw_type": "Action",
+          "properties": {
+            "object": "MFG Core Banking",
+            "action": "Lookup Account",
+            "inputs": [
+              {
+                "name": "AccountNumber",
+                "expression": "[AccountNumber]"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "AccountStatus",
+                "store_in": "AccountStatus"
+              },
+              {
+                "name": "CustomerName",
+                "store_in": "CustomerName"
+              }
+            ]
+          }
+        },
+        {
+          "id": "37469893-2410-4697-b0ae-98f5eca3bba9",
+          "name": "Account Active?",
+          "type": "decision",
+          "raw_type": "Decision",
+          "properties": {
+            "expression": "[AccountStatus] = \"Active\""
+          }
+        },
+        {
+          "id": "06e4ef70-e047-413b-a8ae-58edc178fb2b",
+          "name": "Throw Inactive Account",
+          "type": "exception",
+          "raw_type": "Exception",
+          "properties": {
+            "exception_type": "Business Exception",
+            "detail": "\"Account not active\""
+          }
+        },
+        {
+          "id": "a8383ddf-1f30-47f8-bf8f-d9088ee41589",
+          "name": "MFG Core Banking::Update Account Status",
+          "type": "action",
+          "raw_type": "Action",
+          "properties": {
+            "object": "MFG Core Banking",
+            "action": "Update Account Status",
+            "inputs": [
+              {
+                "name": "AccountNumber",
+                "expression": "[AccountNumber]"
+              },
+              {
+                "name": "NewStatus",
+                "expression": "\"Updated\""
+              }
+            ],
+            "outputs": [
+              {
+                "name": "Success",
+                "store_in": "Success"
+              }
+            ]
+          }
+        }
+      ],
+      "data_items": [
+        {
+          "id": "6dc7a498-6dd3-4242-800b-ab05d6903559",
+          "name": "AccountNumber",
+          "data_type": "text",
+          "initial_value": null
+        },
+        {
+          "id": "898f1684-3f72-4d8f-ae4a-aa39c2d74d5d",
+          "name": "NewAddress",
+          "data_type": "text",
+          "initial_value": null
+        },
+        {
+          "id": "1b973c69-0afc-4ab1-9217-f799ba55c385",
+          "name": "AccountStatus",
+          "data_type": "text",
+          "initial_value": null
+        },
+        {
+          "id": "904562a6-295e-4b23-a955-51330f553854",
+          "name": "CustomerName",
+          "data_type": "text",
+          "initial_value": null
+        },
+        {
+          "id": "07c81bbd-4fe0-45f4-8459-61a61de72710",
+          "name": "Success",
+          "data_type": "flag",
+          "initial_value": null
+        }
+      ],
+      "links": [
+        {
+          "from_stage": "7b1e2cff-2fec-4902-b79b-e46d5871d470",
+          "to_stage": "c1c3d5ad-3583-468f-b193-352b08a64790",
+          "label": null
+        },
+        {
+          "from_stage": "c1c3d5ad-3583-468f-b193-352b08a64790",
+          "to_stage": "cce2fb95-691b-4761-82e8-a83aa6fd24de",
+          "label": null
+        },
+        {
+          "from_stage": "cce2fb95-691b-4761-82e8-a83aa6fd24de",
+          "to_stage": "37469893-2410-4697-b0ae-98f5eca3bba9",
+          "label": null
+        },
+        {
+          "from_stage": "37469893-2410-4697-b0ae-98f5eca3bba9",
+          "to_stage": "a8383ddf-1f30-47f8-bf8f-d9088ee41589",
+          "label": "true"
+        },
+        {
+          "from_stage": "37469893-2410-4697-b0ae-98f5eca3bba9",
+          "to_stage": "06e4ef70-e047-413b-a8ae-58edc178fb2b",
+          "label": "false"
+        },
+        {
+          "from_stage": "a8383ddf-1f30-47f8-bf8f-d9088ee41589",
+          "to_stage": "2ff64eef-22cf-4cfe-8404-531219993c92",
+          "label": null
+        }
+      ],
+      "exception_blocks": []
+    },
+    {
+      "id": "d7a15694-8ad5-4b31-ab3b-0cde7d46d05f",
+      "name": "MFG - Card Dispute Intake",
+      "description": "",
+      "stages": [
+        {
+          "id": "ef4cb80d-ec27-413c-9415-af9bffcac4b0",
+          "name": "Start",
+          "type": "start",
+          "raw_type": "Start",
+          "properties": {
+            "inputs": []
+          }
+        },
+        {
+          "id": "9f0f19d4-5674-423e-8aff-e3d8db279788",
+          "name": "No More Items",
+          "type": "end",
+          "raw_type": "End",
+          "properties": {
+            "outputs": []
+          }
+        },
+        {
+          "id": "2d90b41b-8ed9-4e98-9479-3143fc0f9922",
+          "name": "Get Next Dispute",
+          "type": "queue_read",
+          "raw_type": "Action",
+          "properties": {
+            "object": "Blueprism.Automate.clsWorkQueuesActions",
+            "action": "Get Next Item",
+            "inputs": [
+              {
+                "name": "Queue Name",
+                "expression": "\"Q-Disputes\""
+              },
+              {
+                "name": "Key Filter",
+                "expression": ""
+              },
+              {
+                "name": "Tag Filter",
+                "expression": ""
+              },
+              {
+                "name": "Sort Order",
+                "expression": ""
+              }
+            ],
+            "outputs": [
+              {
+                "name": "Item ID",
+                "store_in": "ItemID"
+              },
+              {
+                "name": "Data",
+                "store_in": "ItemData"
+              },
+              {
+                "name": "Status",
+                "store_in": ""
+              },
+              {
+                "name": "Attempts",
+                "store_in": ""
+              }
+            ],
+            "queue_name": "Q-Disputes"
+          }
+        },
+        {
+          "id": "4fb557e7-d01a-4f6e-b2d2-ffe06a098d6f",
+          "name": "Item Retrieved?",
+          "type": "decision",
+          "raw_type": "Decision",
+          "properties": {
+            "expression": "[ItemID] <> \"\""
+          }
+        },
+        {
+          "id": "a09522ff-9c4a-4cd2-8213-48fb976f8c28",
+          "name": "Unpack Dispute Item",
+          "type": "calculation",
+          "raw_type": "MultipleCalculation",
+          "properties": {
+            "steps": [
+              {
+                "expression": "[ItemData.DisputeRef]",
+                "store_in": "DisputeRef"
+              },
+              {
+                "expression": "[ItemData.AccountNumber]",
+                "store_in": "AccountNumber"
+              },
+              {
+                "expression": "[ItemData.DisputeAmount]",
+                "store_in": "DisputeAmount"
+              },
+              {
+                "expression": "[ItemData.TransactionDate]",
+                "store_in": "TransactionDate"
+              }
+            ]
+          }
+        },
+        {
+          "id": "34f316b7-1db0-4f5d-a54e-c016e10888ef",
+          "name": "Lookup Account",
+          "type": "action",
+          "raw_type": "Action",
+          "properties": {
+            "object": "MFG Core Banking",
+            "action": "Lookup Account",
+            "inputs": [
+              {
+                "name": "AccountNumber",
+                "expression": "[AccountNumber]"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "AccountStatus",
+                "store_in": "AccountStatus"
+              },
+              {
+                "name": "CustomerName",
+                "store_in": "CustomerName"
+              }
+            ]
+          }
+        },
+        {
+          "id": "52b257b3-9cec-4ac9-b153-186174a7a243",
+          "name": "Account Active?",
+          "type": "decision",
+          "raw_type": "Decision",
+          "properties": {
+            "expression": "[AccountStatus] = \"Active\""
+          }
+        },
+        {
+          "id": "24056144-c387-4b14-9175-0986250d2f97",
+          "name": "Mark Exception - Inactive Account",
+          "type": "queue_write",
+          "raw_type": "Action",
+          "properties": {
+            "object": "Blueprism.Automate.clsWorkQueuesActions",
+            "action": "Mark Exception",
+            "inputs": [
+              {
+                "name": "Item ID",
+                "expression": "[ItemID]"
+              },
+              {
+                "name": "Exception Reason",
+                "expression": "\"Account not active\""
+              },
+              {
+                "name": "Retry",
+                "expression": ""
+              },
+              {
+                "name": "Keep Locked",
+                "expression": ""
+              }
+            ],
+            "outputs": [
+              {
+                "name": "New Item ID",
+                "store_in": ""
+              }
+            ]
+          }
+        },
+        {
+          "id": "fd27be17-16cd-4d96-a6aa-43db5c18b122",
+          "name": "Get Transactions",
+          "type": "action",
+          "raw_type": "Action",
+          "properties": {
+            "object": "MFG Core Banking",
+            "action": "Get Transactions",
+            "inputs": [
+              {
+                "name": "AccountNumber",
+                "expression": "[AccountNumber]"
+              },
+              {
+                "name": "FromDate",
+                "expression": "[TransactionDate]"
+              }
+            ],
+            "outputs": [
+              {
+                "name": "Transactions",
+                "store_in": "Transactions"
+              }
+            ]
+          }
+        },
+        {
+          "id": "5d5ffd28-409d-4696-9327-24abb0119caf",
+          "name": "For Each Transaction",
+          "type": "loop_end",
+          "raw_type": "LoopEnd",
+          "properties": {
+            "group_id": "64345799-9b93-4897-b1fa-107c0111b57c",
+            "pair_stage_id": "41797c85-a14f-41de-b6d6-9a2539bba057"
+          }
+        },
+        {
+          "id": "41797c85-a14f-41de-b6d6-9a2539bba057",
+          "name": "For Each Transaction",
+          "type": "loop_start",
+          "raw_type": "LoopStart",
+          "properties": {
+            "group_id": "64345799-9b93-4897-b1fa-107c0111b57c",
+            "loop_type": "ForEach",
+            "collection": "Transactions",
+            "pair_stage_id": "5d5ffd28-409d-4696-9327-24abb0119caf",
+            "body_stage_ids": [
+              "151182ff-c1dd-4c91-8f99-8d723d58f92a",
+              "d3988932-bc8a-48ca-bd13-502738fb2ae0"
+            ]
+          }
+        },
+        {
+          "id": "151182ff-c1dd-4c91-8f99-8d723d58f92a",
+          "name": "Matches Disputed Transaction?",
+          "type": "decision",
+          "raw_type": "Decision",
+          "properties": {
+            "expression": "[Transactions.TxnDate] = [TransactionDate] AND [Transactions.Amount] = [DisputeAmount]"
+          }
+        },
+        {
+          "id": "d3988932-bc8a-48ca-bd13-502738fb2ae0",
+          "name": "Flag Transaction Found",
+          "type": "calculation",
+          "raw_type": "Calculation",
+          "properties": {
+            "expression": "True",
+            "store_in": "TransactionFound"
+          }
+        },
+        {
+          "id": "598b38fb-6e47-48c7-b2f2-e4e8b5a264aa",
+          "name": "Transaction Found?",
+          "type": "decision",
+          "raw_type": "Decision",
+          "properties": {
+            "expression": "[TransactionFound]"
+          }
+        },
+        {
+          "id": "b5bd0a9b-d317-4f94-bf2f-5f72db1f557f",
+          "name": "Mark Exception - No Matching Transaction",
+          "type": "queue_write",
+          "raw_type": "Action",
+          "properties": {
+            "object": "Blueprism.Automate.clsWorkQueuesActions",
+            "action": "Mark Exception",
+            "inputs": [
+              {
+                "name": "Item ID",
+                "expression": "[ItemID]"
+              },
+              {
+                "name": "Exception Reason",
+                "expression": "\"No matching transaction\""
+              },
+              {
+                "name": "Retry",
+                "expression": ""
+              },
+              {
+                "name": "Keep Locked",
+                "expression": ""
+              }
+            ],
+            "outputs": [
+              {
+                "name": "New Item ID",
+                "store_in": ""
+              }
+            ]
+          }
+        },
+        {
+          "id": "b874a3a7-20f6-4127-b96d-e1ffb7ee522d",
+          "name": "Amount Over Review Threshold?",
+          "type": "decision",
+          "raw_type": "Decision",
+          "properties": {
+            "expression": "[DisputeAmount] > [ReviewThreshold]"
+          }
+        },
+        {
+          "id": "594a758e-65b9-4b04-a4fe-023799673946",
+          "name": "Create Review Case",
+          "type": "action",
+          "raw_type": "Action",
+          "properties": {
+            "object": "MFG Case Manager",
+            "action": "Create Case",
+            "inputs": [
+              {
+                "name": "CaseType",
+                "expression": "\"Dispute Review\""
+              },
+              {
+                "name": "Reference",
+                "expression": "[DisputeRef]"
+              },
+              {
+                "name": "Details",
+                "expression": "\"High value dispute requires manual review\""
+              }
+            ],
+            "outputs": [
+              {
+                "name": "CaseId",
+                "store_in": "CaseId"
+              }
+            ]
+          }
+        },
+        {
+          "id": "6950982d-214e-4a1c-b171-1dca50d950a9",
+          "name": "Defer For Review",
+          "type": "queue_write",
+          "raw_type": "Action",
+          "properties": {
+            "object": "Blueprism.Automate.clsWorkQueuesActions",
+            "action": "Mark Exception",
+            "inputs": [
+              {
+                "name": "Item ID",
+                "expression": "[ItemID]"
+              },
+              {
+                "name": "Exception Reason",
+                "expression": "\"Deferred for manual review\""
+              },
+              {
+                "name": "Retry",
+                "expression": ""
+              },
+              {
+                "name": "Keep Locked",
+                "expression": ""
+              }
+            ],
+            "outputs": [
+              {
+                "name": "New Item ID",
+                "store_in": ""
+              }
+            ]
+          }
+        },
+        {
+          "id": "1c4e8603-b736-4cda-ab46-fa9c3fdc030c",
+          "name": "Compute Fee Refund",
+          "type": "calculation",
+          "raw_type": "Calculation",
+          "properties": {
+            "expression": "[DisputeAmount] * [FeeRate]",
+            "store_in": "FeeRefund"
+          }
+        },
+        {
+          "id": "2eb64cbe-3541-4037-8e73-a809bd802dbc",
+          "name": "Compute Provisional Credit",
+          "type": "calculation",
+          "raw_type": "Calculation",
+          "properties": {
+            "expression": "[DisputeAmount] + [FeeRefund]",
+            "store_in": "ProvisionalCredit"
+          }
+        },
+        {
+          "id": "ae41b35a-95b5-4169-9e8f-7a8e44e92ee6",
+          "name": "Posting Attempt",
+          "type": "block",
+          "raw_type": "Block",
+          "properties": {}
+        },
+        {
+          "id": "4c6d50c6-45a4-4be1-ab4a-056f47c38c74",
+          "name": "Post Adjustment",
+          "type": "action",
+          "raw_type": "Action",
+          "properties": {
+            "object": "MFG Core Banking",
+            "action": "Post Adjustment",
+            "inputs": [
+              {
+                "name": "AccountNumber",
+                "expression": "[AccountNumber]"
+              },
+              {
+                "name": "Amount",
+                "expression": "[ProvisionalCredit]"
+              },
+              {
+                "name": "Reason",
+                "expression": "\"Provisional credit for dispute\""
+              }
+            ],
+            "outputs": [
+              {
+                "name": "AdjustmentRef",
+                "store_in": "AdjustmentRef"
+              }
+            ]
+          }
+        },
+        {
+          "id": "d79d48e5-ccf7-43b5-8b83-e8b484468ff5",
+          "name": "Posting Failed",
+          "type": "recover",
+          "raw_type": "Recover",
+          "properties": {}
+        },
+        {
+          "id": "26663bd5-c9ad-4573-a897-aaf44965722b",
+          "name": "Increment Retry",
+          "type": "calculation",
+          "raw_type": "Calculation",
+          "properties": {
+            "expression": "[RetryCount] + 1",
+            "store_in": "RetryCount"
+          }
+        },
+        {
+          "id": "d54f39d1-f838-4e35-a4d9-e1d485626492",
+          "name": "Retry Limit Reached?",
+          "type": "decision",
+          "raw_type": "Decision",
+          "properties": {
+            "expression": "[RetryCount] >= [MaxPostAttempts]"
+          }
+        },
+        {
+          "id": "196f8950-469d-4979-84e0-d352354d7bd5",
+          "name": "Retry Posting",
+          "type": "resume",
+          "raw_type": "Resume",
+          "properties": {}
+        },
+        {
+          "id": "0928f148-2e2a-400e-add2-e3ded19fd8c8",
+          "name": "Mark Exception - Posting Failed",
+          "type": "queue_write",
+          "raw_type": "Action",
+          "properties": {
+            "object": "Blueprism.Automate.clsWorkQueuesActions",
+            "action": "Mark Exception",
+            "inputs": [
+              {
+                "name": "Item ID",
+                "expression": "[ItemID]"
+              },
+              {
+                "name": "Exception Reason",
+                "expression": "\"Posting failed after retries\""
+              },
+              {
+                "name": "Retry",
+                "expression": ""
+              },
+              {
+                "name": "Keep Locked",
+                "expression": ""
+              }
+            ],
+            "outputs": [
+              {
+                "name": "New Item ID",
+                "store_in": ""
+              }
+            ]
+          }
+        },
+        {
+          "id": "05ef59fe-8319-4392-aeb5-85d4742ffa7d",
+          "name": "Mark Dispute Completed",
+          "type": "queue_write",
+          "raw_type": "Action",
+          "properties": {
+            "object": "Blueprism.Automate.clsWorkQueuesActions",
+            "action": "Mark Completed",
+            "inputs": [
+              {
+                "name": "Item ID",
+                "expression": "[ItemID]"
+              }
+            ],
+            "outputs": []
+          }
+        },
+        {
+          "id": "286ac884-7ed4-4fdd-9745-69efd5c6af52",
+          "name": "Give Up",
+          "type": "resume",
+          "raw_type": "Resume",
+          "properties": {}
+        }
+      ],
+      "data_items": [
+        {
+          "id": "8bbb9696-6a95-466c-8610-b7f02aab3eaf",
+          "name": "ProvisionalCredit",
+          "data_type": "number",
+          "initial_value": null
+        },
+        {
+          "id": "f2c57079-73ed-44af-8a22-1f02bca612b8",
+          "name": "AccountNumber",
+          "data_type": "text",
+          "initial_value": null
+        },
+        {
+          "id": "8763cfd1-7e5d-41e4-b9c2-df40c4ed7803",
+          "name": "DisputeAmount",
+          "data_type": "number",
+          "initial_value": null
+        },
+        {
+          "id": "4522c767-3c2d-4825-b270-81bfc18d64d3",
+          "name": "TransactionDate",
+          "data_type": "date",
+          "initial_value": null
+        },
+        {
+          "id": "adfa661c-3b17-4ebf-846a-5086dae60190",
+          "name": "CustomerName",
+          "data_type": "text",
+          "initial_value": null
+        },
+        {
+          "id": "2e85cbbe-1754-4b92-a152-2accd1f03806",
+          "name": "TransactionFound",
+          "data_type": "flag",
+          "initial_value": null
+        },
+        {
+          "id": "ff472f1c-f2f8-48c9-883d-f642223a155e",
+          "name": "FeeRefund",
+          "data_type": "number",
+          "initial_value": null
+        },
+        {
+          "id": "362c3cf6-1f90-43be-a761-7df61ee646f8",
+          "name": "DisputeRef",
+          "data_type": "text",
+          "initial_value": null
+        },
+        {
+          "id": "30ca9eb1-2037-437e-8998-e628ed2a9a9d",
+          "name": "CaseId",
+          "data_type": "text",
+          "initial_value": null
+        },
+        {
+          "id": "ffd262e7-3fe0-49c4-8733-21b82b8f0652",
+          "name": "AccountStatus",
+          "data_type": "text",
+          "initial_value": null
+        },
+        {
+          "id": "e70b19a3-c08d-4b5a-ba43-3c93ae9141d3",
+          "name": "Transactions",
+          "data_type": "collection",
+          "initial_value": {
+            "fields": [
+              {
+                "name": "TxnRef",
+                "type": "text"
+              },
+              {
+                "name": "Amount",
+                "type": "number"
+              },
+              {
+                "name": "TxnDate",
+                "type": "date"
+              }
+            ],
+            "rows": []
+          }
+        },
+        {
+          "id": "68c85f20-ae9f-4c80-b1e9-320a90ef2d49",
+          "name": "RetryCount",
+          "data_type": "number",
+          "initial_value": "0"
+        },
+        {
+          "id": "d578120a-10bb-4a0d-8e68-6d88f5a00bb5",
+          "name": "ReviewThreshold",
+          "data_type": "number",
+          "initial_value": "500"
+        },
+        {
+          "id": "7e5d4c05-a11b-4aa1-80ba-6413acf6c6ad",
+          "name": "FeeRate",
+          "data_type": "number",
+          "initial_value": "0.015"
+        },
+        {
+          "id": "4261ff77-e741-4a8b-a50d-22d60c9b4eba",
+          "name": "MaxPostAttempts",
+          "data_type": "number",
+          "initial_value": "3"
+        },
+        {
+          "id": "950b4263-c495-4066-9d94-d34304b29eaa",
+          "name": "ItemID",
+          "data_type": "text",
+          "initial_value": null
+        },
+        {
+          "id": "e29d8ad3-a8d3-4478-a1c2-4afaf1e8b5ab",
+          "name": "ItemData",
+          "data_type": "collection",
+          "initial_value": {
+            "fields": [],
+            "rows": []
+          }
+        },
+        {
+          "id": "9ab6e755-7f2b-409c-a0da-c6c1ed48c762",
+          "name": "AdjustmentRef",
+          "data_type": "text",
+          "initial_value": null
+        }
+      ],
+      "links": [
+        {
+          "from_stage": "ef4cb80d-ec27-413c-9415-af9bffcac4b0",
+          "to_stage": "2d90b41b-8ed9-4e98-9479-3143fc0f9922",
+          "label": null
+        },
+        {
+          "from_stage": "2d90b41b-8ed9-4e98-9479-3143fc0f9922",
+          "to_stage": "4fb557e7-d01a-4f6e-b2d2-ffe06a098d6f",
+          "label": null
+        },
+        {
+          "from_stage": "4fb557e7-d01a-4f6e-b2d2-ffe06a098d6f",
+          "to_stage": "a09522ff-9c4a-4cd2-8213-48fb976f8c28",
+          "label": "true"
+        },
+        {
+          "from_stage": "4fb557e7-d01a-4f6e-b2d2-ffe06a098d6f",
+          "to_stage": "9f0f19d4-5674-423e-8aff-e3d8db279788",
+          "label": "false"
+        },
+        {
+          "from_stage": "a09522ff-9c4a-4cd2-8213-48fb976f8c28",
+          "to_stage": "34f316b7-1db0-4f5d-a54e-c016e10888ef",
+          "label": null
+        },
+        {
+          "from_stage": "34f316b7-1db0-4f5d-a54e-c016e10888ef",
+          "to_stage": "52b257b3-9cec-4ac9-b153-186174a7a243",
+          "label": null
+        },
+        {
+          "from_stage": "52b257b3-9cec-4ac9-b153-186174a7a243",
+          "to_stage": "fd27be17-16cd-4d96-a6aa-43db5c18b122",
+          "label": "true"
+        },
+        {
+          "from_stage": "52b257b3-9cec-4ac9-b153-186174a7a243",
+          "to_stage": "24056144-c387-4b14-9175-0986250d2f97",
+          "label": "false"
+        },
+        {
+          "from_stage": "24056144-c387-4b14-9175-0986250d2f97",
+          "to_stage": "2d90b41b-8ed9-4e98-9479-3143fc0f9922",
+          "label": null
+        },
+        {
+          "from_stage": "fd27be17-16cd-4d96-a6aa-43db5c18b122",
+          "to_stage": "41797c85-a14f-41de-b6d6-9a2539bba057",
+          "label": null
+        },
+        {
+          "from_stage": "5d5ffd28-409d-4696-9327-24abb0119caf",
+          "to_stage": "598b38fb-6e47-48c7-b2f2-e4e8b5a264aa",
+          "label": null
+        },
+        {
+          "from_stage": "41797c85-a14f-41de-b6d6-9a2539bba057",
+          "to_stage": "151182ff-c1dd-4c91-8f99-8d723d58f92a",
+          "label": null
+        },
+        {
+          "from_stage": "151182ff-c1dd-4c91-8f99-8d723d58f92a",
+          "to_stage": "d3988932-bc8a-48ca-bd13-502738fb2ae0",
+          "label": "true"
+        },
+        {
+          "from_stage": "151182ff-c1dd-4c91-8f99-8d723d58f92a",
+          "to_stage": "5d5ffd28-409d-4696-9327-24abb0119caf",
+          "label": "false"
+        },
+        {
+          "from_stage": "d3988932-bc8a-48ca-bd13-502738fb2ae0",
+          "to_stage": "5d5ffd28-409d-4696-9327-24abb0119caf",
+          "label": null
+        },
+        {
+          "from_stage": "598b38fb-6e47-48c7-b2f2-e4e8b5a264aa",
+          "to_stage": "b874a3a7-20f6-4127-b96d-e1ffb7ee522d",
+          "label": "true"
+        },
+        {
+          "from_stage": "598b38fb-6e47-48c7-b2f2-e4e8b5a264aa",
+          "to_stage": "b5bd0a9b-d317-4f94-bf2f-5f72db1f557f",
+          "label": "false"
+        },
+        {
+          "from_stage": "b5bd0a9b-d317-4f94-bf2f-5f72db1f557f",
+          "to_stage": "2d90b41b-8ed9-4e98-9479-3143fc0f9922",
+          "label": null
+        },
+        {
+          "from_stage": "b874a3a7-20f6-4127-b96d-e1ffb7ee522d",
+          "to_stage": "594a758e-65b9-4b04-a4fe-023799673946",
+          "label": "true"
+        },
+        {
+          "from_stage": "b874a3a7-20f6-4127-b96d-e1ffb7ee522d",
+          "to_stage": "1c4e8603-b736-4cda-ab46-fa9c3fdc030c",
+          "label": "false"
+        },
+        {
+          "from_stage": "594a758e-65b9-4b04-a4fe-023799673946",
+          "to_stage": "6950982d-214e-4a1c-b171-1dca50d950a9",
+          "label": null
+        },
+        {
+          "from_stage": "6950982d-214e-4a1c-b171-1dca50d950a9",
+          "to_stage": "2d90b41b-8ed9-4e98-9479-3143fc0f9922",
+          "label": null
+        },
+        {
+          "from_stage": "1c4e8603-b736-4cda-ab46-fa9c3fdc030c",
+          "to_stage": "2eb64cbe-3541-4037-8e73-a809bd802dbc",
+          "label": null
+        },
+        {
+          "from_stage": "2eb64cbe-3541-4037-8e73-a809bd802dbc",
+          "to_stage": "4c6d50c6-45a4-4be1-ab4a-056f47c38c74",
+          "label": null
+        },
+        {
+          "from_stage": "4c6d50c6-45a4-4be1-ab4a-056f47c38c74",
+          "to_stage": "05ef59fe-8319-4392-aeb5-85d4742ffa7d",
+          "label": null
+        },
+        {
+          "from_stage": "d79d48e5-ccf7-43b5-8b83-e8b484468ff5",
+          "to_stage": "26663bd5-c9ad-4573-a897-aaf44965722b",
+          "label": null
+        },
+        {
+          "from_stage": "26663bd5-c9ad-4573-a897-aaf44965722b",
+          "to_stage": "d54f39d1-f838-4e35-a4d9-e1d485626492",
+          "label": null
+        },
+        {
+          "from_stage": "d54f39d1-f838-4e35-a4d9-e1d485626492",
+          "to_stage": "286ac884-7ed4-4fdd-9745-69efd5c6af52",
+          "label": "true"
+        },
+        {
+          "from_stage": "d54f39d1-f838-4e35-a4d9-e1d485626492",
+          "to_stage": "196f8950-469d-4979-84e0-d352354d7bd5",
+          "label": "false"
+        },
+        {
+          "from_stage": "196f8950-469d-4979-84e0-d352354d7bd5",
+          "to_stage": "4c6d50c6-45a4-4be1-ab4a-056f47c38c74",
+          "label": null
+        },
+        {
+          "from_stage": "0928f148-2e2a-400e-add2-e3ded19fd8c8",
+          "to_stage": "2d90b41b-8ed9-4e98-9479-3143fc0f9922",
+          "label": null
+        },
+        {
+          "from_stage": "05ef59fe-8319-4392-aeb5-85d4742ffa7d",
+          "to_stage": "2d90b41b-8ed9-4e98-9479-3143fc0f9922",
+          "label": null
+        },
+        {
+          "from_stage": "286ac884-7ed4-4fdd-9745-69efd5c6af52",
+          "to_stage": "0928f148-2e2a-400e-add2-e3ded19fd8c8",
+          "label": null
+        }
+      ],
+      "exception_blocks": [
+        {
+          "id": "ae41b35a-95b5-4169-9e8f-7a8e44e92ee6",
+          "covers_stages": [
+            "4c6d50c6-45a4-4be1-ab4a-056f47c38c74"
+          ],
+          "handler_stage": "d79d48e5-ccf7-43b5-8b83-e8b484468ff5"
+        }
+      ]
+    },
+    {
+      "id": "86b65907-a49e-4383-b964-06d2d5f22151",
+      "name": "MFG - Daily Settlement Reconciliation",
+      "description": "",
+      "stages": [
+        {
+          "id": "01f1920a-88a4-4e29-bd04-221d5ecc55ef",
+          "name": "Start",
+          "type": "start",
+          "raw_type": "Start",
+          "properties": {
+            "inputs": [
+              {
+                "name": "ExpectedTotal",
+                "type": "number",
+                "store_in": "ExpectedTotal"
+              }
+            ]
+          }
+        },
+        {
+          "id": "1109d39b-3f51-4829-b70c-d90e473404b8",
+          "name": "End",
+          "type": "end",
+          "raw_type": "End",
+          "properties": {
+            "outputs": [
+              {
+                "name": "RunninTotal",
+                "type": "number",
+                "from": "RunningTotal"
+              },
+              {
+                "name": "RowCount",
+                "type": "number",
+                "from": "RowCount"
+              }
+            ]
+          }
+        },
+        {
+          "id": "1ce83645-ef19-45b0-aba7-d0272940942e",
+          "name": "Get Settlement Report",
+          "type": "action",
+          "raw_type": "Action",
+          "properties": {
+            "object": "MFG Core Banking",
+            "action": "Get Transactions",
+            "inputs": [
+              {
+                "name": "AccountNumber",
+                "expression": ""
+              },
+              {
+                "name": "FromDate",
+                "expression": ""
+              }
+            ],
+            "outputs": [
+              {
+                "name": "Transactions",
+                "store_in": "ReportRows"
+              }
+            ]
+          }
+        },
+        {
+          "id": "6f794d92-846d-4576-a507-0580f26fb7e8",
+          "name": "For Each Row",
+          "type": "loop_end",
+          "raw_type": "LoopEnd",
+          "properties": {
+            "group_id": "0057c673-ffd0-496b-9c27-2f372dba4552",
+            "pair_stage_id": "0a8b7a6c-4ed9-45d5-874b-d2e2e7ce57b1"
+          }
+        },
+        {
+          "id": "0a8b7a6c-4ed9-45d5-874b-d2e2e7ce57b1",
+          "name": "For Each Row",
+          "type": "loop_start",
+          "raw_type": "LoopStart",
+          "properties": {
+            "group_id": "0057c673-ffd0-496b-9c27-2f372dba4552",
+            "loop_type": "ForEach",
+            "collection": "ReportRows",
+            "pair_stage_id": "6f794d92-846d-4576-a507-0580f26fb7e8",
+            "body_stage_ids": [
+              "6f8a2455-2f21-4964-9406-90a33a544e47",
+              "eec3b889-c5a0-4f5d-9c28-7a1cf95c33b6"
+            ]
+          }
+        },
+        {
+          "id": "eec3b889-c5a0-4f5d-9c28-7a1cf95c33b6",
+          "name": "Accumulate Total",
+          "type": "calculation",
+          "raw_type": "Calculation",
+          "properties": {
+            "expression": "[RunningTotal] + [ReportRows.Amount]",
+            "store_in": "RunningTotal"
+          }
+        },
+        {
+          "id": "6f8a2455-2f21-4964-9406-90a33a544e47",
+          "name": "Count Rows",
+          "type": "calculation",
+          "raw_type": "Calculation",
+          "properties": {
+            "expression": "[RowCount] + 1",
+            "store_in": "RowCount"
+          }
+        },
+        {
+          "id": "a9b0960b-c81c-4dbe-b2c1-dbc046052940",
+          "name": "Compute Variance",
+          "type": "calculation",
+          "raw_type": "Calculation",
+          "properties": {
+            "expression": "[RunningTotal] - [ExpectedTotal]",
+            "store_in": "Variance"
+          }
+        },
+        {
+          "id": "a16769bb-fa39-4a02-8e1e-19d9e21d49d7",
+          "name": "Variance Within Tolerance?",
+          "type": "decision",
+          "raw_type": "Decision",
+          "properties": {
+            "expression": "[Variance] <= [Tolerance] AND [Variance] >= 0 - [Tolerance]"
+          }
+        },
+        {
+          "id": "c0dc862e-4fe2-4411-9c35-3e66bb29a879",
+          "name": "Create Variance Case",
+          "type": "action",
+          "raw_type": "Action",
+          "properties": {
+            "object": "MFG Case Manager",
+            "action": "Create Case",
+            "inputs": [
+              {
+                "name": "CaseType",
+                "expression": "\"Settlement Variance\""
+              },
+              {
+                "name": "Reference",
+                "expression": "\"RECON\""
+              },
+              {
+                "name": "Details",
+                "expression": "\"Settlement variance outside tolerance\""
+              }
+            ],
+            "outputs": [
+              {
+                "name": "CaseId",
+                "store_in": "CaseId"
+              }
+            ]
+          }
+        },
+        {
+          "id": "91b7d971-283c-4b24-aecb-3541077f4b74",
+          "name": "Throw Variance Exception",
+          "type": "exception",
+          "raw_type": "Exception",
+          "properties": {
+            "exception_type": "Business Exception",
+            "detail": "\"Settlement variance outside tolerance\""
+          }
+        }
+      ],
+      "data_items": [
+        {
+          "id": "e3c74c79-0190-4a40-a195-f87aa4c7ee12",
+          "name": "RunningTotal",
+          "data_type": "number",
+          "initial_value": "0"
+        },
+        {
+          "id": "c6faa4d9-e93d-41eb-bccb-f5d07c1756b0",
+          "name": "ExpectedTotal",
+          "data_type": "number",
+          "initial_value": null
+        },
+        {
+          "id": "fa38f980-25ed-4a5c-bd49-f50553ffb5ed",
+          "name": "Variance",
+          "data_type": "number",
+          "initial_value": null
+        },
+        {
+          "id": "a0d5d8b9-7af3-4eee-a73b-5884678257f2",
+          "name": "Tolerance",
+          "data_type": "number",
+          "initial_value": "25"
+        },
+        {
+          "id": "5b6c0901-2806-4592-bbbb-39bd53246484",
+          "name": "RowCount",
+          "data_type": "number",
+          "initial_value": "0"
+        },
+        {
+          "id": "dae6aaea-8b99-4beb-9125-4a36640742d7",
+          "name": "CaseId",
+          "data_type": "text",
+          "initial_value": null
+        },
+        {
+          "id": "d58a722a-c7b7-4505-ab79-c27663af71a1",
+          "name": "ReportRows",
+          "data_type": "collection",
+          "initial_value": {
+            "fields": [
+              {
+                "name": "TxnRef",
+                "type": "text"
+              },
+              {
+                "name": "TxnDate",
+                "type": "date"
+              },
+              {
+                "name": "Amount",
+                "type": "number"
+              }
+            ],
+            "rows": []
+          }
+        }
+      ],
+      "links": [
+        {
+          "from_stage": "01f1920a-88a4-4e29-bd04-221d5ecc55ef",
+          "to_stage": "1ce83645-ef19-45b0-aba7-d0272940942e",
+          "label": null
+        },
+        {
+          "from_stage": "1ce83645-ef19-45b0-aba7-d0272940942e",
+          "to_stage": "0a8b7a6c-4ed9-45d5-874b-d2e2e7ce57b1",
+          "label": null
+        },
+        {
+          "from_stage": "6f794d92-846d-4576-a507-0580f26fb7e8",
+          "to_stage": "a9b0960b-c81c-4dbe-b2c1-dbc046052940",
+          "label": null
+        },
+        {
+          "from_stage": "0a8b7a6c-4ed9-45d5-874b-d2e2e7ce57b1",
+          "to_stage": "eec3b889-c5a0-4f5d-9c28-7a1cf95c33b6",
+          "label": null
+        },
+        {
+          "from_stage": "eec3b889-c5a0-4f5d-9c28-7a1cf95c33b6",
+          "to_stage": "6f8a2455-2f21-4964-9406-90a33a544e47",
+          "label": null
+        },
+        {
+          "from_stage": "6f8a2455-2f21-4964-9406-90a33a544e47",
+          "to_stage": "6f794d92-846d-4576-a507-0580f26fb7e8",
+          "label": null
+        },
+        {
+          "from_stage": "a9b0960b-c81c-4dbe-b2c1-dbc046052940",
+          "to_stage": "a16769bb-fa39-4a02-8e1e-19d9e21d49d7",
+          "label": null
+        },
+        {
+          "from_stage": "a16769bb-fa39-4a02-8e1e-19d9e21d49d7",
+          "to_stage": "1109d39b-3f51-4829-b70c-d90e473404b8",
+          "label": "true"
+        },
+        {
+          "from_stage": "a16769bb-fa39-4a02-8e1e-19d9e21d49d7",
+          "to_stage": "c0dc862e-4fe2-4411-9c35-3e66bb29a879",
+          "label": "false"
+        },
+        {
+          "from_stage": "c0dc862e-4fe2-4411-9c35-3e66bb29a879",
+          "to_stage": "91b7d971-283c-4b24-aecb-3541077f4b74",
+          "label": null
+        }
+      ],
+      "exception_blocks": []
+    },
+    {
+      "id": "21af9fee-0485-43b2-bde7-9a07a1ee017b",
+      "name": "MFG - Dispute Feeder",
+      "description": "",
+      "stages": [
+        {
+          "id": "601200e6-05ab-4d48-9e29-ba414cb2978d",
+          "name": "Start",
+          "type": "start",
+          "raw_type": "Start",
+          "properties": {
+            "inputs": []
+          }
+        },
+        {
+          "id": "c0c12f1b-b238-4b65-af38-27b15026a079",
+          "name": "End",
+          "type": "end",
+          "raw_type": "End",
+          "properties": {
+            "outputs": [
+              {
+                "name": "ItemCount",
+                "type": "number",
+                "from": "ItemCount"
+              }
+            ]
+          }
+        },
+        {
+          "id": "81d58aea-0719-4f15-b392-c9e4604948f0",
+          "name": "For Each Dispute",
+          "type": "loop_end",
+          "raw_type": "LoopEnd",
+          "properties": {
+            "group_id": "b7efe33d-7d4a-4ed0-b082-abe31c00e23c",
+            "pair_stage_id": "7282aa16-ec45-4a17-a07e-b54a66248ec6"
+          }
+        },
+        {
+          "id": "7282aa16-ec45-4a17-a07e-b54a66248ec6",
+          "name": "For Each Dispute",
+          "type": "loop_start",
+          "raw_type": "LoopStart",
+          "properties": {
+            "group_id": "b7efe33d-7d4a-4ed0-b082-abe31c00e23c",
+            "loop_type": "ForEach",
+            "collection": "Disputes",
+            "pair_stage_id": "81d58aea-0719-4f15-b392-c9e4604948f0",
+            "body_stage_ids": [
+              "3bb33f23-6442-446c-b9e0-dcc6cffd2fe5",
+              "894d2ad9-43a3-4aaf-b8c5-2619419e2ffb",
+              "f58ec21b-4339-435b-b9b0-2515ddcfbdfd"
+            ]
+          }
+        },
+        {
+          "id": "894d2ad9-43a3-4aaf-b8c5-2619419e2ffb",
+          "name": "Add Dispute To Queue",
+          "type": "queue_write",
+          "raw_type": "Action",
+          "properties": {
+            "object": "Blueprism.Automate.clsWorkQueuesActions",
+            "action": "Add To Queue",
+            "inputs": [
+              {
+                "name": "Queue Name",
+                "expression": "\"Q-Disputes\""
+              },
+              {
+                "name": "Data",
+                "expression": "[Disputes]"
+              },
+              {
+                "name": "Defer Until",
+                "expression": ""
+              },
+              {
+                "name": "Priority",
+                "expression": ""
+              },
+              {
+                "name": "Tags",
+                "expression": ""
+              },
+              {
+                "name": "Status",
+                "expression": ""
+              },
+              {
+                "name": "Batch Size",
+                "expression": ""
+              },
+              {
+                "name": "SLA",
+                "expression": ""
+              },
+              {
+                "name": "SLA Deadline",
+                "expression": ""
+              }
+            ],
+            "outputs": [
+              {
+                "name": "Item IDs",
+                "store_in": ""
+              }
+            ],
+            "queue_name": "Q-Disputes"
+          }
+        },
+        {
+          "id": "3bb33f23-6442-446c-b9e0-dcc6cffd2fe5",
+          "name": "Stage Dsipute Row",
+          "type": "calculation",
+          "raw_type": "MultipleCalculation",
+          "properties": {
+            "steps": [
+              {
+                "expression": "[Disputes.DisputeRef]",
+                "store_in": "DisputeRow.DisputeRef"
+              },
+              {
+                "expression": "[Disputes.AccountNumber]",
+                "store_in": "DisputeRow.AccountNumber"
+              },
+              {
+                "expression": "[Disputes.DisputeAmount]",
+                "store_in": "DisputeRow.DisputeAmount"
+              },
+              {
+                "expression": "[Disputes.TransactionDate]",
+                "store_in": "DisputeRow.TransactionDate"
+              }
+            ]
+          }
+        },
+        {
+          "id": "f58ec21b-4339-435b-b9b0-2515ddcfbdfd",
+          "name": "Count Loaded",
+          "type": "calculation",
+          "raw_type": "Calculation",
+          "properties": {
+            "expression": "[ItemCount] + 1",
+            "store_in": "ItemCount"
+          }
+        }
+      ],
+      "data_items": [
+        {
+          "id": "c9328905-6092-4246-a241-eae42c8446ac",
+          "name": "Disputes",
+          "data_type": "collection",
+          "initial_value": {
+            "fields": [
+              {
+                "name": "DisputeRef",
+                "type": "text"
+              },
+              {
+                "name": "AccountNumber",
+                "type": "text"
+              },
+              {
+                "name": "DisputeAmount",
+                "type": "number"
+              },
+              {
+                "name": "TransactionDate",
+                "type": "date"
+              }
+            ],
+            "rows": [
+              {
+                "DisputeRef": "DSP-1001",
+                "AccountNumber": "44012876",
+                "DisputeAmount": "128.75",
+                "TransactionDate": "2026/06/02"
+              },
+              {
+                "DisputeRef": "DSP-1002",
+                "AccountNumber": "44029310",
+                "DisputeAmount": "640.00",
+                "TransactionDate": "2026/06/03"
+              },
+              {
+                "DisputeRef": "DSP-1003",
+                "AccountNumber": "44031255",
+                "DisputeAmount": "89.99",
+                "TransactionDate": "2026/06/03"
+              },
+              {
+                "DisputeRef": "DSP-1004",
+                "AccountNumber": "44041977",
+                "DisputeAmount": "2000.00",
+                "TransactionDate": "2026/06/01"
+              }
+            ]
+          }
+        },
+        {
+          "id": "93987559-c2b1-474c-92f8-869b810d3831",
+          "name": "ItemCount",
+          "data_type": "number",
+          "initial_value": "0"
+        },
+        {
+          "id": "933950ae-7f38-4caf-9acf-135da8919857",
+          "name": "DisputeRow",
+          "data_type": "collection",
+          "initial_value": {
+            "fields": [
+              {
+                "name": "DisputeRef",
+                "type": "text"
+              },
+              {
+                "name": "AccountNumber",
+                "type": "text"
+              },
+              {
+                "name": "DisputeAmount",
+                "type": "number"
+              },
+              {
+                "name": "TransactionDate",
+                "type": "date"
+              }
+            ],
+            "rows": [
+              {
+                "DisputeRef": "",
+                "AccountNumber": "",
+                "DisputeAmount": "",
+                "TransactionDate": ""
+              }
+            ]
+          }
+        }
+      ],
+      "links": [
+        {
+          "from_stage": "601200e6-05ab-4d48-9e29-ba414cb2978d",
+          "to_stage": "7282aa16-ec45-4a17-a07e-b54a66248ec6",
+          "label": null
+        },
+        {
+          "from_stage": "81d58aea-0719-4f15-b392-c9e4604948f0",
+          "to_stage": "c0c12f1b-b238-4b65-af38-27b15026a079",
+          "label": null
+        },
+        {
+          "from_stage": "7282aa16-ec45-4a17-a07e-b54a66248ec6",
+          "to_stage": "894d2ad9-43a3-4aaf-b8c5-2619419e2ffb",
+          "label": null
+        },
+        {
+          "from_stage": "894d2ad9-43a3-4aaf-b8c5-2619419e2ffb",
+          "to_stage": "3bb33f23-6442-446c-b9e0-dcc6cffd2fe5",
+          "label": null
+        },
+        {
+          "from_stage": "3bb33f23-6442-446c-b9e0-dcc6cffd2fe5",
+          "to_stage": "f58ec21b-4339-435b-b9b0-2515ddcfbdfd",
+          "label": null
+        },
+        {
+          "from_stage": "f58ec21b-4339-435b-b9b0-2515ddcfbdfd",
+          "to_stage": "81d58aea-0719-4f15-b392-c9e4604948f0",
+          "label": null
+        }
+      ],
+      "exception_blocks": []
+    }
+  ],
+  "objects": [
+    {
+      "id": "31715aa0-7a32-4605-b955-371e9b5c996a",
+      "name": "MFG Case Manager",
+      "actions": [
+        {
+          "id": "884a72e5-ba15-4655-8162-16ad15337027",
+          "name": "Close Case",
+          "stages": [
+            {
+              "id": "27ff31c4-745d-492a-af9d-3024ffe44f3a",
+              "name": "Start",
+              "type": "start",
+              "raw_type": "Start",
+              "properties": {
+                "inputs": [
+                  {
+                    "name": "CaseId",
+                    "type": "text",
+                    "store_in": "CaseId"
+                  },
+                  {
+                    "name": "Outcome",
+                    "type": "text",
+                    "store_in": "Outcome"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "afb08a69-3879-4b6f-a96f-b5ec85b4b12e",
+              "name": "End",
+              "type": "end",
+              "raw_type": "End",
+              "properties": {
+                "outputs": [
+                  {
+                    "name": "Success",
+                    "type": "flag",
+                    "from": "Success"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "27dd362c-6adf-4bd9-8ad9-533300e8cb5c",
+              "name": "Set Success",
+              "type": "calculation",
+              "raw_type": "Calculation",
+              "properties": {
+                "expression": "True",
+                "store_in": "Success"
+              }
+            },
+            {
+              "id": "2e6eae38-8b5e-43d0-bfab-4c83c079b67f",
+              "name": "CaseId",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "text",
+                "initial_value": null
+              }
+            },
+            {
+              "id": "9587ea63-5c4b-43d7-b270-1539a678770b",
+              "name": "Outcome",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "text",
+                "initial_value": null
+              }
+            },
+            {
+              "id": "7218369e-6831-406e-8ce2-4034db570008",
+              "name": "Success",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "flag",
+                "initial_value": null
+              }
+            }
+          ]
+        },
+        {
+          "id": "6e5f4619-c6f5-41d4-b10d-ad89828cf05d",
+          "name": "Create Case",
+          "stages": [
+            {
+              "id": "33dbe62e-b2a5-41dc-ae7b-f1bc9fac875d",
+              "name": "Start",
+              "type": "start",
+              "raw_type": "Start",
+              "properties": {
+                "inputs": [
+                  {
+                    "name": "CaseType",
+                    "type": "text",
+                    "store_in": "CaseType"
+                  },
+                  {
+                    "name": "Reference",
+                    "type": "text",
+                    "store_in": "Reference"
+                  },
+                  {
+                    "name": "Details",
+                    "type": "text",
+                    "store_in": "Details"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "e61dcb81-d752-4a80-b9ab-6f97115360be",
+              "name": "End",
+              "type": "end",
+              "raw_type": "End",
+              "properties": {
+                "outputs": [
+                  {
+                    "name": "CaseId",
+                    "type": "text",
+                    "from": "CaseId"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "b0b7d290-da44-42fc-ba8f-02badc006268",
+              "name": "Set Case Id",
+              "type": "calculation",
+              "raw_type": "Calculation",
+              "properties": {
+                "expression": "\"CASE-0001\"",
+                "store_in": "CaseId"
+              }
+            },
+            {
+              "id": "6a922d26-65a1-4010-9e03-ae5cb6ef08bc",
+              "name": "CaseType",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "text",
+                "initial_value": null
+              }
+            },
+            {
+              "id": "7558f75b-6656-443f-a355-3580c9ea104b",
+              "name": "Reference",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "text",
+                "initial_value": null
+              }
+            },
+            {
+              "id": "eaafe949-87e4-47b5-9a49-d7f4181d6193",
+              "name": "Details",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "text",
+                "initial_value": null
+              }
+            },
+            {
+              "id": "667d8148-6d42-4d66-9bd6-5809882f258b",
+              "name": "CaseId",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "text",
+                "initial_value": null
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "589da678-a24d-4135-8f37-e24ed9c3366e",
+      "name": "MFG Core Banking",
+      "actions": [
+        {
+          "id": "f039e48a-888a-48fa-87d3-348f24bd8818",
+          "name": "Get Transactions",
+          "stages": [
+            {
+              "id": "240cb9ce-af07-4ba6-9333-87ccce8b9492",
+              "name": "Start",
+              "type": "start",
+              "raw_type": "Start",
+              "properties": {
+                "inputs": [
+                  {
+                    "name": "AccountNumber",
+                    "type": "text",
+                    "store_in": "AccountNumber"
+                  },
+                  {
+                    "name": "FromDate",
+                    "type": "date",
+                    "store_in": "FromDate"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "c683144a-b966-426a-9ca0-6fb7a8fbe461",
+              "name": "End",
+              "type": "end",
+              "raw_type": "End",
+              "properties": {
+                "outputs": [
+                  {
+                    "name": "Transactions",
+                    "type": "collection",
+                    "from": "Transactions"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "7dec2061-dd38-4cde-9cbd-b1c292811be1",
+              "name": "AccountNumber",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "text",
+                "initial_value": null
+              }
+            },
+            {
+              "id": "d1dde92e-ad54-4c8d-89b7-449a0d168ba0",
+              "name": "FromDate",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "date",
+                "initial_value": null
+              }
+            },
+            {
+              "id": "b1cbfb1a-1a35-45e4-8848-10c6897b64aa",
+              "name": "Transactions",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "collection",
+                "initial_value": {
+                  "fields": [
+                    {
+                      "name": "TxnRef",
+                      "type": "text"
+                    },
+                    {
+                      "name": "Amount",
+                      "type": "number"
+                    },
+                    {
+                      "name": "TxnDate",
+                      "type": "date"
+                    }
+                  ],
+                  "rows": [
+                    {
+                      "TxnRef": "TXN-1001",
+                      "Amount": "250.00",
+                      "TxnDate": "2026/01/03"
+                    },
+                    {
+                      "TxnRef": "TXN-1002",
+                      "Amount": "99.99",
+                      "TxnDate": "2026/05/03"
+                    },
+                    {
+                      "TxnRef": "TXN-1003",
+                      "Amount": "500.00",
+                      "TxnDate": "2026/05/04"
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "id": "ac8d8a40-6a1f-4ea8-afb0-8c385348494b",
+          "name": "Lookup Account",
+          "stages": [
+            {
+              "id": "eef958a6-53c9-483b-b45d-a9e2247aa7d6",
+              "name": "Start",
+              "type": "start",
+              "raw_type": "Start",
+              "properties": {
+                "inputs": [
+                  {
+                    "name": "AccountNumber",
+                    "type": "text",
+                    "store_in": "AccountNumber"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "95355b21-c092-4da7-95e4-dd064e1e0a17",
+              "name": "End",
+              "type": "end",
+              "raw_type": "End",
+              "properties": {
+                "outputs": [
+                  {
+                    "name": "AccountStatus",
+                    "type": "text",
+                    "from": "AccountStatus"
+                  },
+                  {
+                    "name": "CustomerName",
+                    "type": "text",
+                    "from": "CustomerName"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "421d47eb-09e9-4241-a509-779b59c13cf7",
+              "name": "Set Account Details",
+              "type": "calculation",
+              "raw_type": "MultipleCalculation",
+              "properties": {
+                "steps": [
+                  {
+                    "expression": "\"Active\"",
+                    "store_in": "AccountStatus"
+                  },
+                  {
+                    "expression": "\"Alex Morgan\"",
+                    "store_in": "CustomerName"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "36dead95-3ab0-45ad-b1cf-b08ffeea727c",
+              "name": "AccountNumber",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "text",
+                "initial_value": null
+              }
+            },
+            {
+              "id": "1ad0e20f-b5a9-41c9-92ce-eeaa03af1ce4",
+              "name": "AccountStatus",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "text",
+                "initial_value": null
+              }
+            },
+            {
+              "id": "db3b45c0-e269-4756-b68c-1984b467e61b",
+              "name": "CustomerName",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "text",
+                "initial_value": null
+              }
+            }
+          ]
+        },
+        {
+          "id": "1ff40d66-80bd-4976-bbb7-7cc3fb638796",
+          "name": "Post Adjustment",
+          "stages": [
+            {
+              "id": "b9ea58d3-7e6e-410c-afc8-75e3bcbd0e93",
+              "name": "Start",
+              "type": "start",
+              "raw_type": "Start",
+              "properties": {
+                "inputs": [
+                  {
+                    "name": "AccountNumber",
+                    "type": "text",
+                    "store_in": "AccountNumber"
+                  },
+                  {
+                    "name": "Amount",
+                    "type": "number",
+                    "store_in": "Amount"
+                  },
+                  {
+                    "name": "Reason",
+                    "type": "text",
+                    "store_in": "Reason"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "1961b573-5822-45af-89d9-e7252ce21d3f",
+              "name": "End",
+              "type": "end",
+              "raw_type": "End",
+              "properties": {
+                "outputs": [
+                  {
+                    "name": "AdjustmentRef",
+                    "type": "text",
+                    "from": "AdjustmentRef"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "8673a3cc-52e1-44cf-b7f0-9e889216346f",
+              "name": "Set Adjustment Ref",
+              "type": "calculation",
+              "raw_type": "Calculation",
+              "properties": {
+                "expression": "\"ADJ-0001\"",
+                "store_in": "AdjustmentRef"
+              }
+            },
+            {
+              "id": "a440ae4c-4613-4c6c-8f7a-23c17fb6ea52",
+              "name": "Amount",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "number",
+                "initial_value": null
+              }
+            },
+            {
+              "id": "929e5fdc-9465-4218-89b1-7ac73678181c",
+              "name": "Reason",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "text",
+                "initial_value": null
+              }
+            },
+            {
+              "id": "1247db77-cf52-4c71-961c-ff6594539d85",
+              "name": "AdjustmentRef",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "text",
+                "initial_value": null
+              }
+            },
+            {
+              "id": "187179be-53de-468c-9687-3809f7899200",
+              "name": "AccountNumber",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "text",
+                "initial_value": null
+              }
+            }
+          ]
+        },
+        {
+          "id": "c15df03f-f260-43e5-8810-f4b1a7b85994",
+          "name": "Update Account Status",
+          "stages": [
+            {
+              "id": "a95d8816-be51-4515-9614-1bc6ac98448f",
+              "name": "Start",
+              "type": "start",
+              "raw_type": "Start",
+              "properties": {
+                "inputs": [
+                  {
+                    "name": "AccountNumber",
+                    "type": "text",
+                    "store_in": "AccountNumber"
+                  },
+                  {
+                    "name": "NewStatus",
+                    "type": "text",
+                    "store_in": "NewStatus"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "73a0f500-f6f4-4692-bcaf-c86fe7ef201a",
+              "name": "End",
+              "type": "end",
+              "raw_type": "End",
+              "properties": {
+                "outputs": [
+                  {
+                    "name": "Success",
+                    "type": "flag",
+                    "from": "Success"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "339d72ce-cf3f-4768-aa30-ab9c9c817691",
+              "name": "Set Success",
+              "type": "calculation",
+              "raw_type": "Calculation",
+              "properties": {
+                "expression": "True",
+                "store_in": "Success"
+              }
+            },
+            {
+              "id": "227d3e73-103f-4789-bd6c-ded4cce65a46",
+              "name": "AccountNumber",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "text",
+                "initial_value": null
+              }
+            },
+            {
+              "id": "98b97d06-a9ca-4f94-8d37-cfaf10c1ea03",
+              "name": "NewStatus",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "text",
+                "initial_value": null
+              }
+            },
+            {
+              "id": "3679db4a-45b4-4229-9efb-cccc6c020aa0",
+              "name": "Success",
+              "type": "data",
+              "raw_type": "Data",
+              "properties": {
+                "data_type": "flag",
+                "initial_value": null
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "queues": [
+    {
+      "id": "5",
+      "name": "Q-AccountMaintenance",
+      "key_field": "RequestRef",
+      "max_attempts": 3
+    },
+    {
+      "id": "3",
+      "name": "Q-Disputes",
+      "key_field": "DisputeRef",
+      "max_attempts": 3
+    },
+    {
+      "id": "4",
+      "name": "Q-PaymentInvestigations",
+      "key_field": "PaymentRef",
+      "max_attempts": 3
+    }
+  ],
+  "unparsed": []
+}

@@ -1,0 +1,206 @@
+{
+  "schema_version": "0.1.0",
+  "spec_id": "spec-d7a15694-8ad5-4b31-ab3b-0cde7d46d05f",
+  "process_id": "d7a15694-8ad5-4b31-ab3b-0cde7d46d05f",
+  "estate_ref": {
+    "path": "artifacts/estate/estate.json",
+    "sha256": "040a1a59dd7e0dd2ad45b786124ef6879c1c0bdffacd3a1c95f998c7a0949795"
+  },
+  "status": "approved",
+  "created_at": "2026-07-20T19:57:59.659831+00:00",
+  "extraction": {
+    "provider": "anthropic",
+    "model": "claude-sonnet-5",
+    "prompt_version": "0.1.0"
+  },
+  "purpose": {
+    "text": "This process automates the intake and initial resolution of card disputes pulled from a work queue, validating that the underlying account is active and that the disputed transaction genuinely occurred, then either routing high-value disputes to a human case reviewer or automatically issuing a provisional credit (dispute amount plus a calculated fee refund) by posting an adjustment to the core banking system. It includes retry logic for posting failures and ensures every dispute item is ultimately completed or exceptioned on the queue, providing a controlled, auditable path from customer dispute claim to either automated remediation or manual review.",
+    "citations": [
+      "2d90b41b-8ed9-4e98-9479-3143fc0f9922",
+      "a09522ff-9c4a-4cd2-8213-48fb976f8c28",
+      "52b257b3-9cec-4ac9-b153-186174a7a243",
+      "598b38fb-6e47-48c7-b2f2-e4e8b5a264aa",
+      "b874a3a7-20f6-4127-b96d-e1ffb7ee522d",
+      "4c6d50c6-45a4-4be1-ab4a-056f47c38c74",
+      "05ef59fe-8319-4392-aeb5-85d4742ffa7d"
+    ]
+  },
+  "inputs": [
+    {
+      "name": "Dispute queue item",
+      "description": "Raw dispute record (dispute reference, account number, disputed amount, transaction date) retrieved from the work queue for processing",
+      "source": "Q-Disputes work queue",
+      "citations": [
+        "2d90b41b-8ed9-4e98-9479-3143fc0f9922",
+        "a09522ff-9c4a-4cd2-8213-48fb976f8c28"
+      ]
+    },
+    {
+      "name": "Account status and customer details",
+      "description": "Account status and customer name retrieved for the account associated with the dispute",
+      "source": "MFG Core Banking - Lookup Account",
+      "citations": [
+        "34f316b7-1db0-4f5d-a54e-c016e10888ef"
+      ]
+    },
+    {
+      "name": "Account transaction history",
+      "description": "Transactions on the account from the disputed transaction date forward, used to validate the dispute claim",
+      "source": "MFG Core Banking - Get Transactions",
+      "citations": [
+        "fd27be17-16cd-4d96-a6aa-43db5c18b122"
+      ]
+    },
+    {
+      "name": "Configuration thresholds",
+      "description": "Business-configured review threshold, fee rate, and maximum posting retry attempts used to drive decisions",
+      "source": "Process data items (ReviewThreshold, FeeRate, MaxPostAttempts)",
+      "citations": [
+        "b874a3a7-20f6-4127-b96d-e1ffb7ee522d",
+        "1c4e8603-b736-4cda-ab46-fa9c3fdc030c",
+        "d54f39d1-f838-4e35-a4d9-e1d485626492"
+      ]
+    }
+  ],
+  "outputs": [
+    {
+      "name": "Provisional credit adjustment",
+      "description": "A posted core banking adjustment crediting the customer's account with the dispute amount plus fee refund",
+      "destination": "MFG Core Banking - Post Adjustment",
+      "citations": [
+        "4c6d50c6-45a4-4be1-ab4a-056f47c38c74",
+        "2eb64cbe-3541-4037-8e73-a809bd802dbc"
+      ]
+    },
+    {
+      "name": "Manual review case",
+      "description": "A case record created for disputes exceeding the review threshold, requiring human adjudication",
+      "destination": "MFG Case Manager - Create Case",
+      "citations": [
+        "594a758e-65b9-4b04-a4fe-023799673946"
+      ]
+    },
+    {
+      "name": "Queue item disposition",
+      "description": "Dispute queue items are marked completed after successful processing or marked exception with reason when account inactive, no matching transaction, deferred for review, or posting fails",
+      "destination": "Q-Disputes work queue",
+      "citations": [
+        "05ef59fe-8319-4392-aeb5-85d4742ffa7d",
+        "24056144-c387-4b14-9175-0986250d2f97",
+        "b5bd0a9b-d317-4f94-bf2f-5f72db1f557f",
+        "6950982d-214e-4a1c-b171-1dca50d950a9",
+        "0928f148-2e2a-400e-add2-e3ded19fd8c8"
+      ]
+    }
+  ],
+  "business_rules": [
+    {
+      "id": "BR-1",
+      "statement": "A dispute can only proceed if the associated account is active; otherwise it is exceptioned as 'Account not active'.",
+      "citations": [
+        "52b257b3-9cec-4ac9-b153-186174a7a243",
+        "24056144-c387-4b14-9175-0986250d2f97"
+      ]
+    },
+    {
+      "id": "BR-2",
+      "statement": "The dispute must correspond to an actual transaction matching both the transaction date and disputed amount; if no matching transaction is found, the item is exceptioned as 'No matching transaction'.",
+      "citations": [
+        "151182ff-c1dd-4c91-8f99-8d723d58f92a",
+        "598b38fb-6e47-48c7-b2f2-e4e8b5a264aa",
+        "b5bd0a9b-d317-4f94-bf2f-5f72db1f557f"
+      ]
+    },
+    {
+      "id": "BR-3",
+      "statement": "Disputes with an amount exceeding the configured review threshold are not auto-processed; a manual review case is created and the item is deferred rather than resolved automatically.",
+      "citations": [
+        "b874a3a7-20f6-4127-b96d-e1ffb7ee522d",
+        "594a758e-65b9-4b04-a4fe-023799673946",
+        "6950982d-214e-4a1c-b171-1dca50d950a9"
+      ]
+    },
+    {
+      "id": "BR-4",
+      "statement": "For disputes within the threshold, a fee refund is calculated as the dispute amount times a fee rate, and the provisional credit posted equals dispute amount plus fee refund.",
+      "citations": [
+        "1c4e8603-b736-4cda-ab46-fa9c3fdc030c",
+        "2eb64cbe-3541-4037-8e73-a809bd802dbc"
+      ]
+    },
+    {
+      "id": "BR-5",
+      "statement": "If posting the adjustment fails, the process retries up to a maximum number of attempts before giving up and exceptioning the item as 'Posting failed after retries'.",
+      "citations": [
+        "d54f39d1-f838-4e35-a4d9-e1d485626492",
+        "26663bd5-c9ad-4573-a897-aaf44965722b",
+        "196f8950-469d-4979-84e0-d352354d7bd5",
+        "286ac884-7ed4-4fdd-9745-69efd5c6af52",
+        "0928f148-2e2a-400e-add2-e3ded19fd8c8"
+      ]
+    }
+  ],
+  "exception_semantics": [
+    {
+      "condition": "Account associated with the dispute is not active",
+      "current_handling": "Item is marked as an exception on the queue with reason 'Account not active' and the process moves to the next item",
+      "citations": [
+        "52b257b3-9cec-4ac9-b153-186174a7a243",
+        "24056144-c387-4b14-9175-0986250d2f97"
+      ]
+    },
+    {
+      "condition": "No transaction on the account matches the disputed date and amount",
+      "current_handling": "Item is marked as an exception with reason 'No matching transaction'",
+      "citations": [
+        "598b38fb-6e47-48c7-b2f2-e4e8b5a264aa",
+        "b5bd0a9b-d317-4f94-bf2f-5f72db1f557f"
+      ]
+    },
+    {
+      "condition": "Dispute amount exceeds the review threshold",
+      "current_handling": "A manual review case is created and the queue item is marked as an exception with reason 'Deferred for manual review'",
+      "citations": [
+        "b874a3a7-20f6-4127-b96d-e1ffb7ee522d",
+        "594a758e-65b9-4b04-a4fe-023799673946",
+        "6950982d-214e-4a1c-b171-1dca50d950a9"
+      ]
+    },
+    {
+      "condition": "Posting the provisional credit adjustment to core banking fails",
+      "current_handling": "Process enters a recovery block, increments a retry counter, retries posting up to a configured maximum attempts, and if the limit is reached marks the item as an exception with reason 'Posting failed after retries'",
+      "citations": [
+        "ae41b35a-95b5-4169-9e8f-7a8e44e92ee6",
+        "d79d48e5-ccf7-43b5-8b83-e8b484468ff5",
+        "26663bd5-c9ad-4573-a897-aaf44965722b",
+        "d54f39d1-f838-4e35-a4d9-e1d485626492",
+        "196f8950-469d-4979-84e0-d352354d7bd5",
+        "286ac884-7ed4-4fdd-9745-69efd5c6af52",
+        "0928f148-2e2a-400e-add2-e3ded19fd8c8"
+      ]
+    }
+  ],
+  "human_touchpoints": [
+    {
+      "description": "High-value disputes above the review threshold are routed to a human reviewer via a case created in the case management system, and the automated processing is deferred pending that manual decision",
+      "citations": [
+        "b874a3a7-20f6-4127-b96d-e1ffb7ee522d",
+        "594a758e-65b9-4b04-a4fe-023799673946",
+        "6950982d-214e-4a1c-b171-1dca50d950a9"
+      ]
+    },
+    {
+      "description": "Disputes exceptioned for inactive account, no matching transaction, or repeated posting failures are left on the queue in an exception state, implying a human must investigate and resolve them",
+      "citations": [
+        "24056144-c387-4b14-9175-0986250d2f97",
+        "b5bd0a9b-d317-4f94-bf2f-5f72db1f557f",
+        "0928f148-2e2a-400e-add2-e3ded19fd8c8"
+      ]
+    }
+  ],
+  "approval": {
+    "approved_by": "Chris Williams",
+    "approved_at": "2026-07-20T20:14:12.529570+00:00",
+    "changes": []
+  }
+}

@@ -99,6 +99,11 @@ def test_extract_writes_spec_and_provenance(parsed_out, monkeypatch, capsys):
     log = ProvenanceLog.open(spec_dir / "provenance.jsonl", spec["process_id"])
     assert log.verify()
     assert [e.event for e in log.events()] == ["extraction_run", "spec_drafted"]
+    # The derived markdown view is written next to the JSON, with
+    # citations resolved to stage names rather than raw ids.
+    markdown = (spec_dir / "intent-spec.md").read_text(encoding="utf-8")
+    assert "# Intent spec: MFG - Address Change" in markdown
+    assert spec["purpose"]["citations"][0] not in markdown
 
 
 def test_extract_without_estate_document_fails(tmp_path, capsys):
@@ -139,6 +144,9 @@ def test_review_approve_writes_approved_spec_and_provenance(parsed_out, monkeypa
         "spec_drafted",
         "spec_approved",
     ]
+    markdown = (spec_path.parent / "intent-spec.md").read_text(encoding="utf-8")
+    assert "**approved**" in markdown
+    assert "Approved by: **Chris Williams**" in markdown
     # Approving twice is refused.
     assert main(["review", str(spec_path), "--approve", "--by", "Chris Williams"]) == 1
     assert "already approved" in capsys.readouterr().out
