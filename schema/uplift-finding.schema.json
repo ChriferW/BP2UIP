@@ -4,36 +4,88 @@
   "title": "Uplift report",
   "description": "Per-process agentic-uplift analysis. Each finding classifies one step or step group. The default answer is deterministic; any other classification must carry reasoning and criteria references.",
   "type": "object",
-  "required": ["schema_version", "process_id", "spec_ref", "analyzed_at", "findings"],
+  "required": [
+    "schema_version",
+    "process_id",
+    "spec_ref",
+    "analyzed_at",
+    "criteria_version",
+    "findings"
+  ],
   "properties": {
-    "schema_version": { "type": "string" },
-    "process_id": { "type": "string" },
+    "schema_version": {
+      "type": "string"
+    },
+    "process_id": {
+      "type": "string"
+    },
     "spec_ref": {
       "type": "object",
-      "required": ["spec_id", "status_at_analysis"],
+      "required": [
+        "spec_id",
+        "status_at_analysis"
+      ],
       "properties": {
-        "spec_id": { "type": "string" },
-        "status_at_analysis": { "type": "string", "enum": ["draft", "approved"] }
+        "spec_id": {
+          "type": "string"
+        },
+        "status_at_analysis": {
+          "type": "string",
+          "enum": [
+            "draft",
+            "approved"
+          ]
+        }
       }
     },
-    "analyzed_at": { "type": "string", "format": "date-time" },
+    "analyzed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "criteria_version": {
+      "type": "string",
+      "description": "Version line of docs/uplift-criteria.md the findings cite."
+    },
     "findings": {
       "type": "array",
       "items": {
         "type": "object",
-        "required": ["id", "stage_ids", "classification", "reasoning", "criteria"],
+        "required": [
+          "id",
+          "stage_ids",
+          "classification",
+          "reasoning",
+          "criteria"
+        ],
         "properties": {
-          "id": { "type": "string" },
-          "stage_ids": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+          "id": {
+            "type": "string"
+          },
+          "stage_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1
+          },
           "classification": {
             "type": "string",
-            "enum": ["AGENTIC_CANDIDATE", "KEEP_DETERMINISTIC", "HUMAN_GATE"]
+            "enum": [
+              "AGENTIC_CANDIDATE",
+              "KEEP_DETERMINISTIC",
+              "HUMAN_GATE"
+            ]
           },
-          "reasoning": { "type": "string", "minLength": 1 },
+          "reasoning": {
+            "type": "string",
+            "minLength": 1
+          },
           "criteria": {
             "type": "array",
             "description": "Rule IDs in docs/uplift-criteria.md.",
-            "items": { "type": "string" }
+            "items": {
+              "type": "string"
+            }
           }
         }
       }

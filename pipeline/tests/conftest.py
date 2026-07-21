@@ -23,6 +23,11 @@ def p03_estate() -> Estate:
     return parse_release([FIXTURES / "meridian-p03-address-change.bprelease"])
 
 
+@pytest.fixture(scope="session")
+def full_estate() -> Estate:
+    return parse_release([FIXTURES / "meridian-estate.bprelease"])
+
+
 @pytest.fixture
 def estate_ref() -> EstateRef:
     return EstateRef(path="artifacts/estate/estate.json", sha256="0" * 64)

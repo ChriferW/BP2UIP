@@ -1,6 +1,7 @@
 import pytest
 
 from bp2uip import docsgen, emitters
+from bp2uip.analysis import CRITERIA_VERSION
 from bp2uip.gate import UnapprovedSpecError, require_approved
 from bp2uip.intent import approve_spec
 from bp2uip.model import UpliftReport, UpliftSpecRef, utc_now
@@ -53,6 +54,7 @@ def _uplift_report(spec):
         process_id=spec.process_id,
         spec_ref=UpliftSpecRef(spec_id=spec.spec_id, status_at_analysis=spec.status),
         analyzed_at=utc_now(),
+        criteria_version=CRITERIA_VERSION,
         findings=[],
     )
 

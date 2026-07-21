@@ -1,0 +1,49 @@
+{
+  "schema_version": "0.1.0",
+  "analyzed_at": "2026-07-22T00:00:00Z",
+  "estate_ref": {
+    "path": "artifacts/estate/estate.json",
+    "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "complexity": [
+    {
+      "process_id": "proc-dispute-intake",
+      "process_name": "MFG - Card Dispute Intake",
+      "stage_count": 29,
+      "logic_stage_count": 27,
+      "decision_count": 6,
+      "branching_depth": 5,
+      "loop_count": 1,
+      "object_call_count": 4,
+      "distinct_objects": ["MFG Case Manager", "MFG Core Banking"],
+      "queue_operation_count": 6,
+      "exception_construct_count": 5,
+      "exception_density": 0.185,
+      "score": 66,
+      "band": "high"
+    }
+  ],
+  "dependencies": {
+    "processes": [
+      {
+        "process_id": "proc-dispute-intake",
+        "process_name": "MFG - Card Dispute Intake",
+        "objects": [
+          { "object": "MFG Core Banking", "actions": ["Get Transactions", "Lookup Account"] }
+        ],
+        "queues": [{ "queue": "Q-Disputes", "reads": 1, "adds": 0, "dispositions": 5 }],
+        "subprocesses": []
+      }
+    ],
+    "object_fan_in": [
+      { "object": "MFG Core Banking", "used_by": ["proc-dispute-intake"] }
+    ],
+    "queue_couplings": [
+      {
+        "queue": "Q-Disputes",
+        "producers": ["proc-dispute-feeder"],
+        "consumers": ["proc-dispute-intake"]
+      }
+    ]
+  }
+}

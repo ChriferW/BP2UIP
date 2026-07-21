@@ -1,7 +1,8 @@
 """The bp2uip command line interface.
 
-`parse` (roadmap week 2), `extract`, and `review` (roadmap week 3) are
-implemented. Every other subcommand is still a stub: it parses its
+`parse` (roadmap week 2), `extract`, `review` (roadmap week 3), and
+`analyze` (roadmap week 4) are implemented. Every other subcommand is
+still a stub: it parses its
 arguments, states what it will do and which roadmap week implements
 it, and exits 0. No fake output, no fake progress.
 """
@@ -15,12 +16,13 @@ from pathlib import Path
 
 from dotenv import find_dotenv, load_dotenv
 
+from bp2uip.analysis import analyze_estate, analyze_uplift
 from bp2uip.intent import ExtractionError, approve_spec, extract_intent, find_process
 from bp2uip.model import Estate, EstateRef, IntentSpec, to_document
 from bp2uip.parser import ParseError, parse_release
 from bp2uip.provenance import ProvenanceLog
 from bp2uip.providers import ProviderConfigError, get_provider
-from bp2uip.render import spec_to_markdown
+from bp2uip.render import spec_to_markdown, uplift_to_markdown
 
 
 def _cmd_parse(args: argparse.Namespace) -> int:
@@ -159,6 +161,83 @@ def _cmd_review(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_analyze(args: argparse.Namespace) -> int:
+    estate_path = Path(args.estate)
+    if not estate_path.exists():
+        print(f"analyze: estate document not found at {estate_path}; run `bp2uip parse` first")
+        return 1
+    raw = estate_path.read_bytes()
+    estate = Estate.model_validate_json(raw)
+    estate_ref = EstateRef(path=str(estate_path), sha256=hashlib.sha256(raw).hexdigest())
+    out = Path(args.out)
+
+    analysis = analyze_estate(estate, estate_ref=estate_ref)
+    analysis_path = out / "estate" / "analysis.json"
+    analysis_path.parent.mkdir(parents=True, exist_ok=True)
+    analysis_path.write_text(json.dumps(to_document(analysis), indent=2) + "\n", encoding="utf-8")
+    print(
+        f"analyze: complexity and dependency graph for "
+        f"{len(estate.processes)} process(es) -> {analysis_path}"
+    )
+    for entry in analysis.complexity:
+        print(f"  {entry.process_name}: score {entry.score} ({entry.band})")
+
+    if args.process:
+        try:
+            targets = [find_process(estate, args.process)]
+        except ExtractionError as exc:
+            print(f"analyze: {exc}")
+            return 1
+    else:
+        targets = estate.processes
+
+    failed = False
+    for process in targets:
+        spec_path = out / _slug(process.name) / "intent-spec.json"
+        if not spec_path.exists():
+            print(
+                f"analyze: no intent spec for '{process.name}' at {spec_path}; "
+                f"run `bp2uip extract` first (uplift analysis skipped)"
+            )
+            # Skipping the whole estate's stragglers is routine; failing
+            # to analyze the one process the user named is an error.
+            failed = failed or bool(args.process)
+            continue
+        spec = IntentSpec.model_validate_json(spec_path.read_text(encoding="utf-8"))
+        stale = spec.estate_ref.sha256 != estate_ref.sha256
+        if stale:
+            print(
+                f"analyze: warning: spec {spec.spec_id} was extracted from a "
+                f"different estate revision (sha mismatch); findings may not "
+                f"line up with the current stages"
+            )
+        report = analyze_uplift(estate, spec)
+        report_path = spec_path.parent / "uplift.json"
+        report_path.write_text(json.dumps(to_document(report), indent=2) + "\n", encoding="utf-8")
+        (spec_path.parent / "uplift.md").write_text(
+            uplift_to_markdown(report, estate), encoding="utf-8"
+        )
+        detail = {
+            "spec_id": spec.spec_id,
+            "status_at_analysis": report.spec_ref.status_at_analysis,
+            "criteria_version": report.criteria_version,
+            "path": str(report_path),
+        }
+        if stale:
+            detail["estate_sha_mismatch"] = True
+        log = ProvenanceLog.open(spec_path.parent / "provenance.jsonl", process.id)
+        log.append(actor="bp2uip/analyzer", event="uplift_analyzed", detail=detail)
+        counts: dict[str, int] = {}
+        for finding in report.findings:
+            counts[finding.classification] = counts.get(finding.classification, 0) + 1
+        summary = ", ".join(f"{n} {c}" for c, n in sorted(counts.items()))
+        print(
+            f"analyze: uplift for '{process.name}' "
+            f"(spec {report.spec_ref.status_at_analysis}): {summary} -> {report_path}"
+        )
+    return 1 if failed else 0
+
+
 def _cmd_generate(args: argparse.Namespace) -> int:
     targets = [
         name
@@ -223,6 +302,19 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--approve", action="store_true", help="approve the spec")
     p.add_argument("--by", help="reviewer name; required with --approve, never inferred")
     p.set_defaults(func=_cmd_review)
+
+    p = sub.add_parser(
+        "analyze",
+        help="complexity, dependency graph, and uplift findings from the estate and its specs",
+    )
+    p.add_argument("process", nargs="?", help="limit uplift analysis to one process (ID or name)")
+    p.add_argument(
+        "--estate",
+        default="artifacts/estate/estate.json",
+        help="estate document produced by `bp2uip parse`",
+    )
+    p.add_argument("-o", "--out", default="artifacts", help="artifact output directory")
+    p.set_defaults(func=_cmd_analyze)
 
     p = sub.add_parser("generate", help="generate documents and UiPath artifacts")
     p.add_argument("process", help="process ID or name")

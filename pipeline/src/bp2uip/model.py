@@ -241,6 +241,7 @@ EventType = Literal[
     "spec_drafted",
     "spec_corrected",
     "spec_approved",
+    "uplift_analyzed",
     "generation",
     "unreviewed_generation",
     "report_generated",
@@ -283,7 +284,83 @@ class UpliftReport(BaseModel):
     process_id: str
     spec_ref: UpliftSpecRef
     analyzed_at: str
+    criteria_version: str  # version line of docs/uplift-criteria.md
     findings: list[UpliftFinding]
+
+
+# --------------------------------------------------------------------------
+# Estate analysis (schema/estate-analysis.schema.json)
+# --------------------------------------------------------------------------
+
+ComplexityBand = Literal["low", "medium", "high"]
+
+
+class ComplexityScore(BaseModel):
+    """Per-process migration-effort heuristic. The score is an ordinal
+    ranking with documented weights, not an estimate in days."""
+
+    process_id: str
+    process_name: str
+    stage_count: int
+    logic_stage_count: int  # excludes start, end, note
+    decision_count: int
+    branching_depth: int  # max decisions on any acyclic path from start
+    loop_count: int
+    object_call_count: int
+    distinct_objects: list[str]
+    queue_operation_count: int
+    exception_construct_count: int
+    exception_density: float  # exception constructs / logic stages
+    score: int
+    band: ComplexityBand
+
+
+class ObjectUse(BaseModel):
+    object: str
+    actions: list[str]
+
+
+class QueueUse(BaseModel):
+    queue: str
+    reads: int
+    adds: int
+    dispositions: int  # completions and exception marks on the current item
+
+
+class ProcessDependencies(BaseModel):
+    process_id: str
+    process_name: str
+    objects: list[ObjectUse]
+    queues: list[QueueUse]
+    subprocesses: list[str]
+
+
+class ObjectFanIn(BaseModel):
+    object: str
+    used_by: list[str]  # process ids
+
+
+class QueueCoupling(BaseModel):
+    """Two processes are coupled through a queue when one adds items the
+    other consumes; the edge is derived, never declared in the source."""
+
+    queue: str
+    producers: list[str]  # process ids that add items
+    consumers: list[str]  # process ids that read items
+
+
+class DependencyGraph(BaseModel):
+    processes: list[ProcessDependencies]
+    object_fan_in: list[ObjectFanIn]
+    queue_couplings: list[QueueCoupling]
+
+
+class EstateAnalysis(BaseModel):
+    schema_version: str = SCHEMA_VERSION
+    analyzed_at: str
+    estate_ref: EstateRef
+    complexity: list[ComplexityScore]
+    dependencies: DependencyGraph
 
 
 # --------------------------------------------------------------------------

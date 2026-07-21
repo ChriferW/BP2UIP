@@ -11,6 +11,7 @@ from pydantic import ValidationError as PydanticValidationError
 
 from bp2uip.model import (
     Estate,
+    EstateAnalysis,
     IntentSpec,
     Manifest,
     ProvenanceEvent,
@@ -27,6 +28,7 @@ ARTIFACT_TYPES = [
     ("intent-spec", IntentSpec),
     ("provenance-event", ProvenanceEvent),
     ("uplift-finding", UpliftReport),
+    ("estate-analysis", EstateAnalysis),
     ("manifest", Manifest),
 ]
 

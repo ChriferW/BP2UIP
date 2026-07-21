@@ -155,3 +155,65 @@ def test_review_approve_writes_approved_spec_and_provenance(parsed_out, monkeypa
 def test_review_of_missing_spec_fails(tmp_path, capsys):
     assert main(["review", str(tmp_path / "nope.json")]) == 1
     assert "not found" in capsys.readouterr().out
+
+
+# --------------------------------------------------------------------------
+# analyze (week 4)
+# --------------------------------------------------------------------------
+
+
+def _analyze(parsed_out, process=None):
+    argv = ["analyze", "--estate", str(parsed_out / "estate" / "estate.json")]
+    argv += ["--out", str(parsed_out)]
+    if process:
+        argv.insert(1, process)
+    return main(argv)
+
+
+def test_analyze_writes_estate_analysis_and_uplift(parsed_out, monkeypatch, capsys):
+    assert _extract_p03(parsed_out, monkeypatch) == 0
+    capsys.readouterr()
+    assert _analyze(parsed_out) == 0
+    out = capsys.readouterr().out
+    assert "not implemented" not in out
+
+    analysis = json.loads((parsed_out / "estate" / "analysis.json").read_text(encoding="utf-8"))
+    assert [c["process_name"] for c in analysis["complexity"]] == ["MFG - Address Change"]
+    assert analysis["complexity"][0]["band"] == "low"
+
+    spec_dir = parsed_out / "mfg-address-change"
+    report = json.loads((spec_dir / "uplift.json").read_text(encoding="utf-8"))
+    assert report["spec_ref"]["status_at_analysis"] == "draft"
+    assert report["criteria_version"]
+    assert report["findings"]
+    log = ProvenanceLog.open(spec_dir / "provenance.jsonl", report["process_id"])
+    assert log.verify()
+    assert [e.event for e in log.events()] == [
+        "extraction_run",
+        "spec_drafted",
+        "uplift_analyzed",
+    ]
+    markdown = (spec_dir / "uplift.md").read_text(encoding="utf-8")
+    assert "# Uplift analysis: MFG - Address Change" in markdown
+    assert report["findings"][0]["stage_ids"][0] not in markdown
+
+
+def test_analyze_without_estate_document_fails(tmp_path, capsys):
+    missing = tmp_path / "estate" / "estate.json"
+    assert main(["analyze", "--estate", str(missing), "--out", str(tmp_path)]) == 1
+    assert "run `bp2uip parse` first" in capsys.readouterr().out
+
+
+def test_analyze_skips_processes_without_specs(parsed_out, capsys):
+    # No spec extracted: estate-wide analysis still writes complexity
+    # and the dependency graph, and says why uplift was skipped.
+    assert _analyze(parsed_out) == 0
+    out = capsys.readouterr().out
+    assert "uplift analysis skipped" in out
+    assert (parsed_out / "estate" / "analysis.json").exists()
+    assert not (parsed_out / "mfg-address-change" / "uplift.json").exists()
+
+
+def test_analyze_named_process_without_spec_fails(parsed_out, capsys):
+    assert _analyze(parsed_out, process="MFG - Address Change") == 1
+    assert "uplift analysis skipped" in capsys.readouterr().out

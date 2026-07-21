@@ -24,6 +24,7 @@
         "spec_drafted",
         "spec_corrected",
         "spec_approved",
+        "uplift_analyzed",
         "generation",
         "unreviewed_generation",
         "report_generated"

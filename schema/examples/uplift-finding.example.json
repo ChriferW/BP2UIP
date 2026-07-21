@@ -6,13 +6,18 @@
     "status_at_analysis": "approved"
   },
   "analyzed_at": "2026-07-22T00:00:00Z",
+  "criteria_version": "0.1.0",
   "findings": [
     {
-      "id": "UF-1",
-      "stage_ids": ["stage-002"],
+      "id": "uf-01",
+      "stage_ids": [
+        "stage-002"
+      ],
       "classification": "KEEP_DETERMINISTIC",
-      "reasoning": "Threshold comparison is policy-unambiguous; judgment does not change the outcome.",
-      "criteria": ["UC-1"]
+      "reasoning": "'Compute Fee Refund': deterministic arithmetic and data staging; regulated amounts must not be model-mediated.",
+      "criteria": [
+        "KD-1"
+      ]
     }
   ]
 }

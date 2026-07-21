@@ -1,0 +1,139 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/ChriferW/BP2UIP/schema/estate-analysis.schema.json",
+  "title": "Estate analysis",
+  "description": "Estate-wide complexity scores and dependency graph, computed by pure code over the estate model (no LLM). The complexity score is an ordinal ranking heuristic with documented weights, not an effort estimate in days.",
+  "type": "object",
+  "required": ["schema_version", "analyzed_at", "estate_ref", "complexity", "dependencies"],
+  "properties": {
+    "schema_version": { "type": "string" },
+    "analyzed_at": { "type": "string", "format": "date-time" },
+    "estate_ref": {
+      "type": "object",
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string" },
+        "sha256": { "type": "string" }
+      }
+    },
+    "complexity": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "process_id",
+          "process_name",
+          "stage_count",
+          "logic_stage_count",
+          "decision_count",
+          "branching_depth",
+          "loop_count",
+          "object_call_count",
+          "distinct_objects",
+          "queue_operation_count",
+          "exception_construct_count",
+          "exception_density",
+          "score",
+          "band"
+        ],
+        "properties": {
+          "process_id": { "type": "string" },
+          "process_name": { "type": "string" },
+          "stage_count": { "type": "integer", "minimum": 0 },
+          "logic_stage_count": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Stages excluding start, end, and note."
+          },
+          "decision_count": { "type": "integer", "minimum": 0 },
+          "branching_depth": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Maximum number of decision stages on any acyclic path from a start stage."
+          },
+          "loop_count": { "type": "integer", "minimum": 0 },
+          "object_call_count": { "type": "integer", "minimum": 0 },
+          "distinct_objects": { "type": "array", "items": { "type": "string" } },
+          "queue_operation_count": { "type": "integer", "minimum": 0 },
+          "exception_construct_count": { "type": "integer", "minimum": 0 },
+          "exception_density": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Exception constructs divided by logic stages."
+          },
+          "score": { "type": "integer", "minimum": 0 },
+          "band": { "type": "string", "enum": ["low", "medium", "high"] }
+        }
+      }
+    },
+    "dependencies": {
+      "type": "object",
+      "required": ["processes", "object_fan_in", "queue_couplings"],
+      "properties": {
+        "processes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["process_id", "process_name", "objects", "queues", "subprocesses"],
+            "properties": {
+              "process_id": { "type": "string" },
+              "process_name": { "type": "string" },
+              "objects": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["object", "actions"],
+                  "properties": {
+                    "object": { "type": "string" },
+                    "actions": { "type": "array", "items": { "type": "string" } }
+                  }
+                }
+              },
+              "queues": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "required": ["queue", "reads", "adds", "dispositions"],
+                  "properties": {
+                    "queue": { "type": "string" },
+                    "reads": { "type": "integer", "minimum": 0 },
+                    "adds": { "type": "integer", "minimum": 0 },
+                    "dispositions": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "description": "Completions and exception marks on the current item."
+                    }
+                  }
+                }
+              },
+              "subprocesses": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "object_fan_in": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["object", "used_by"],
+            "properties": {
+              "object": { "type": "string" },
+              "used_by": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        },
+        "queue_couplings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["queue", "producers", "consumers"],
+            "properties": {
+              "queue": { "type": "string" },
+              "producers": { "type": "array", "items": { "type": "string" } },
+              "consumers": { "type": "array", "items": { "type": "string" } }
+            }
+          }
+        }
+      }
+    }
+  }
+}
