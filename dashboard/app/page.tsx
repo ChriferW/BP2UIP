@@ -40,10 +40,13 @@ export default function Home() {
             : {candidates} agentic candidate{candidates === 1 ? "" : "s"} found
             across the estate, every finding citing its criteria.
           </li>
-          <li className="text-neutral-500">
-            Intent specs: {approved} approved, {drafts} awaiting review. The
-            review screen arrives in week 5; approval happens in the CLI for
-            now.
+          <li>
+            <Link href="/review" className="underline underline-offset-4 hover:text-white">
+              Intent review
+            </Link>
+            : {approved} approved, {drafts} awaiting review. Check each claim
+            against its cited stages and approve with your name recorded to
+            provenance.
           </li>
         </ul>
       ) : (

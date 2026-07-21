@@ -22,6 +22,9 @@ export default function RootLayout({
             <Link href="/estate" className="text-neutral-400 hover:text-neutral-100">
               Estate
             </Link>
+            <Link href="/review" className="text-neutral-400 hover:text-neutral-100">
+              Review
+            </Link>
             <Link href="/uplift" className="text-neutral-400 hover:text-neutral-100">
               Uplift
             </Link>

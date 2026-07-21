@@ -33,12 +33,16 @@ its output came from.
       |              complexity scores,
       |              dependency graph
       v
-  generate ......... PDD, SDD, UiPath     (roadmap weeks 5-7)
+  generate ......... PDD, SDD             (built, week 5)
+      |              UiPath artifacts     (roadmap weeks 6-7)
+      v
+  report ........... modernization report (built, week 5)
 ```
 
 Each arrow is a CLI command (`bp2uip parse`, `extract`, `review`,
-`analyze`, and later `generate` and `report`). Commands that are not
-built yet say so and exit; nothing pretends to work.
+`analyze`, `generate`, `report`). Commands that are not built yet
+(`generate --xaml`, `--bpmn`) say so and exit; nothing pretends to
+work.
 
 ## What a .bprelease file is
 
@@ -172,15 +176,50 @@ specs; no LLM is involved. One command produces two kinds of artifact:
   evidence) and records the spec's status at analysis time, so a
   report over an unreviewed draft says so.
 
+## Step 5: document generation (`bp2uip generate`, `bp2uip report`)
+
+From an approved spec the pipeline generates the two documents an RPA
+intake process requires, plus an estate-wide summary. All of it is a
+pure mapping from the artifacts; no LLM is involved in generation:
+
+- **PDD** (as-is): purpose, trigger and workload derived from the
+  queue configuration, inputs/outputs, the current-state flow as a
+  link-ordered stage walk, business rules, exception handling both as
+  the spec describes it and as the structure shows it, systems,
+  human touchpoints, and configuration constants with their values.
+- **SDD** (to-be): target UiPath architecture derived from queue
+  usage (dispatcher/performer shapes, coupled pairs flagged), queue
+  and Config design with values to carry over, the Blue Prism to
+  UiPath exception taxonomy mapping, every uplift finding as a
+  per-step decision input, an explicit human-build TODO list for what
+  the export cannot provide (selectors, credentials, agentic design
+  decisions), and provenance references.
+- **Modernization report**: per-process complexity, uplift findings,
+  and a suggested migration wave order that keeps queue-coupled
+  processes together.
+
+The gate is enforced in code here: `generate` refuses a draft spec.
+`--force` exists for demos and appends an `unreviewed_generation`
+event to provenance before anything is written; a forced document
+carries a header saying it came from a draft. Generation also writes
+each process's `manifest.json`, the index of its artifacts with their
+hashes; the manifest never claims an artifact that does not exist.
+Markdown is the primary output; DOCX is produced when pandoc is
+installed and skipped with a notice when it is not.
+
 ## The dashboard
 
-A Next.js application in `dashboard/` that renders the pipeline's JSON
-artifacts and computes nothing itself: an estate explorer (complexity
+A Next.js application in `dashboard/`: an estate explorer (complexity
 table plus the queue couplings), a per-process page (score breakdown,
-dependencies, and every stage with its uplift classification), and an
+dependencies, and every stage with its uplift classification), an
 uplift map (all findings grouped by classification, reasoning and
-criteria shown). Run it with `pnpm dev` from `dashboard/`; if an
-artifact is missing, the page says which pipeline command produces it.
+criteria shown), and the intent-review screen: extracted claims next
+to the source stages, click a claim to highlight the stages it cites,
+and approve with a typed reviewer name. Approval invokes the pipeline
+CLI (one implementation of the lifecycle transition and the
+provenance chain), so the dashboard stays a surface, not a second
+engine. Run it with `pnpm dev` from `dashboard/`; if an artifact is
+missing, the page says which pipeline command produces it.
 
 ## Provenance
 
@@ -193,10 +232,11 @@ approved spec and the extraction run to the exact source bytes.
 
 ## What is not built yet
 
-PDD/SDD generation (week 5), the dashboard's intent-review screen
-(week 5), and UiPath artifact generation, meaning REFramework
-scaffolding and Maestro BPMN (weeks 6-7). The CLI stubs
-for these state what they will do and exit. The build logs in
+UiPath artifact generation, meaning REFramework scaffolding and
+Maestro BPMN (weeks 6-7), per-section corrections in the review
+screen (rejecting means leaving the spec a draft for now), and
+uploading a release through the dashboard. The CLI stubs
+for the emitters state what they will do and exit. The build logs in
 `docs/build-log/` record week by week what was actually built, what
 broke, and what was decided, including the parts that went wrong.
 

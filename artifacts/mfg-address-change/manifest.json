@@ -1,0 +1,37 @@
+{
+  "schema_version": "0.1.0",
+  "process_id": "431cbc7f-25f9-4975-8981-72107f1f5288",
+  "process_name": "MFG - Address Change",
+  "generated_at": "2026-07-21T01:27:06.221483+00:00",
+  "pipeline_version": "0.1.0",
+  "artifacts": {
+    "estate": {
+      "path": "artifacts/estate/estate.json",
+      "sha256": "040a1a59dd7e0dd2ad45b786124ef6879c1c0bdffacd3a1c95f998c7a0949795",
+      "schema_version": "0.1.0"
+    },
+    "intent_spec": {
+      "path": "artifacts/mfg-address-change/intent-spec.json",
+      "sha256": "07d7cee1ee42a48c23bcc73507e3facacd2bfb2ec0fa90c6a78f19ef6a667b5e",
+      "schema_version": "0.1.0",
+      "status": "approved"
+    },
+    "uplift": {
+      "path": "artifacts/mfg-address-change/uplift.json",
+      "sha256": "8bfb83ead73e6c963745bd97198a1e5c36d1e2ba6fd308e04cd77fe0ca7789c4",
+      "schema_version": "0.1.0"
+    },
+    "provenance": {
+      "path": "artifacts/mfg-address-change/provenance.jsonl",
+      "events": 6
+    },
+    "pdd": {
+      "path": "artifacts/mfg-address-change/pdd.md",
+      "sha256": "75c9a9815a2d3e37b2de3a74a9500b4b3bdbc5d05fe2a3f38c2f032921c05ac0"
+    },
+    "sdd": {
+      "path": "artifacts/mfg-address-change/sdd.md",
+      "sha256": "b3b3dad788eaaf1f48a1ba87536bf8f7f1b6c2efefde5a7616a2c1501782aa65"
+    }
+  }
+}

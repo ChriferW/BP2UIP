@@ -1,0 +1,37 @@
+{
+  "schema_version": "0.1.0",
+  "process_id": "d7a15694-8ad5-4b31-ab3b-0cde7d46d05f",
+  "process_name": "MFG - Card Dispute Intake",
+  "generated_at": "2026-07-21T01:27:06.372004+00:00",
+  "pipeline_version": "0.1.0",
+  "artifacts": {
+    "estate": {
+      "path": "artifacts/estate/estate.json",
+      "sha256": "040a1a59dd7e0dd2ad45b786124ef6879c1c0bdffacd3a1c95f998c7a0949795",
+      "schema_version": "0.1.0"
+    },
+    "intent_spec": {
+      "path": "artifacts/mfg-card-dispute-intake/intent-spec.json",
+      "sha256": "330fd26e188250913aaed4574c3b2d0c868fd8295c8484294670928733608d3c",
+      "schema_version": "0.1.0",
+      "status": "approved"
+    },
+    "uplift": {
+      "path": "artifacts/mfg-card-dispute-intake/uplift.json",
+      "sha256": "185a4e2b63d1ebcf301f2c42b2e0f1bbaebb2b8bf0cf9f294973195ea8b0bbaa",
+      "schema_version": "0.1.0"
+    },
+    "provenance": {
+      "path": "artifacts/mfg-card-dispute-intake/provenance.jsonl",
+      "events": 6
+    },
+    "pdd": {
+      "path": "artifacts/mfg-card-dispute-intake/pdd.md",
+      "sha256": "435de2b6292482b030d86396c246c8125d0efaf1360068f663340bc33903ea35"
+    },
+    "sdd": {
+      "path": "artifacts/mfg-card-dispute-intake/sdd.md",
+      "sha256": "21d9318aa6d188dec0def7bd280664693d46905690c63eda9f21a29454cf9d27"
+    }
+  }
+}

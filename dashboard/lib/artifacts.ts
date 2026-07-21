@@ -12,6 +12,7 @@ export interface Stage {
   id: string;
   name: string;
   type: string;
+  properties?: Record<string, unknown>;
 }
 
 export interface Process {
@@ -67,8 +68,19 @@ export interface IntentSpec {
   spec_id: string;
   process_id: string;
   status: "draft" | "approved";
+  created_at: string;
   extraction: { provider: string; model: string; prompt_version: string };
   approval: { approved_by: string; approved_at: string } | null;
+  purpose: { text: string; citations: string[] };
+  inputs: { name: string; description: string; source: string; citations: string[] }[];
+  outputs: { name: string; description: string; destination: string; citations: string[] }[];
+  business_rules: { id: string; statement: string; citations: string[] }[];
+  exception_semantics: {
+    condition: string;
+    current_handling: string;
+    citations: string[];
+  }[];
+  human_touchpoints: { description: string; citations: string[] }[];
 }
 
 export type Classification = "AGENTIC_CANDIDATE" | "KEEP_DETERMINISTIC" | "HUMAN_GATE";

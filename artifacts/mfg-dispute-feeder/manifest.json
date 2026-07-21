@@ -1,0 +1,37 @@
+{
+  "schema_version": "0.1.0",
+  "process_id": "21af9fee-0485-43b2-bde7-9a07a1ee017b",
+  "process_name": "MFG - Dispute Feeder",
+  "generated_at": "2026-07-21T01:27:06.663704+00:00",
+  "pipeline_version": "0.1.0",
+  "artifacts": {
+    "estate": {
+      "path": "artifacts/estate/estate.json",
+      "sha256": "040a1a59dd7e0dd2ad45b786124ef6879c1c0bdffacd3a1c95f998c7a0949795",
+      "schema_version": "0.1.0"
+    },
+    "intent_spec": {
+      "path": "artifacts/mfg-dispute-feeder/intent-spec.json",
+      "sha256": "c6cf254fce580543e0e9bd0400c14d75de77d48efb02c6eefdcef3dcfa8bf973",
+      "schema_version": "0.1.0",
+      "status": "approved"
+    },
+    "uplift": {
+      "path": "artifacts/mfg-dispute-feeder/uplift.json",
+      "sha256": "6ef18dba8d2942f2540aee64187d327560aa9e01bb60eea9192bb42bee5815f8",
+      "schema_version": "0.1.0"
+    },
+    "provenance": {
+      "path": "artifacts/mfg-dispute-feeder/provenance.jsonl",
+      "events": 6
+    },
+    "pdd": {
+      "path": "artifacts/mfg-dispute-feeder/pdd.md",
+      "sha256": "8b7b90d9376b64cc4466b5b5611e15def50c9641244325f86ee6ca36344ada37"
+    },
+    "sdd": {
+      "path": "artifacts/mfg-dispute-feeder/sdd.md",
+      "sha256": "ef16d6e21e62bcb1273e6abec6eb47aed05c21c2028e7287beff6eec4d82c5aa"
+    }
+  }
+}
