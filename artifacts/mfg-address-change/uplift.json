@@ -1,0 +1,46 @@
+{
+  "schema_version": "0.1.0",
+  "process_id": "431cbc7f-25f9-4975-8981-72107f1f5288",
+  "spec_ref": {
+    "spec_id": "spec-431cbc7f-25f9-4975-8981-72107f1f5288",
+    "status_at_analysis": "approved"
+  },
+  "analyzed_at": "2026-07-21T00:48:59.701553+00:00",
+  "criteria_version": "0.1.0",
+  "findings": [
+    {
+      "id": "uf-01",
+      "stage_ids": [
+        "06e4ef70-e047-413b-a8ae-58edc178fb2b"
+      ],
+      "classification": "HUMAN_GATE",
+      "reasoning": "'Throw Inactive Account': each ends automated handling and leaves the item in a state a person must investigate and resolve.",
+      "criteria": [
+        "HG-2"
+      ]
+    },
+    {
+      "id": "uf-02",
+      "stage_ids": [
+        "cce2fb95-691b-4761-82e8-a83aa6fd24de",
+        "a8383ddf-1f30-47f8-bf8f-d9088ee41589"
+      ],
+      "classification": "KEEP_DETERMINISTIC",
+      "reasoning": "'Lookup Account', 'MFG Core Banking::Update Account Status': invocations of defined interfaces; the target system's contract does not loosen because a model is upstream.",
+      "criteria": [
+        "KD-2"
+      ]
+    },
+    {
+      "id": "uf-03",
+      "stage_ids": [
+        "37469893-2410-4697-b0ae-98f5eca3bba9"
+      ],
+      "classification": "KEEP_DETERMINISTIC",
+      "reasoning": "'Account Active?': explicit flow control; the condition is fully stated in the source, there is no judgment to uplift.",
+      "criteria": [
+        "KD-4"
+      ]
+    }
+  ]
+}

@@ -29,15 +29,16 @@ its output came from.
   review ........... approved spec        (built, week 3)
       |
       v
-  analyze .......... uplift report        (roadmap week 4)
-      |
+  analyze .......... uplift report,       (built, week 4)
+      |              complexity scores,
+      |              dependency graph
       v
   generate ......... PDD, SDD, UiPath     (roadmap weeks 5-7)
 ```
 
-Each arrow is a CLI command (`bp2uip parse`, `extract`, `review`, and
-later `generate` and `report`). Commands that are not built yet say so
-and exit; nothing pretends to work.
+Each arrow is a CLI command (`bp2uip parse`, `extract`, `review`,
+`analyze`, and later `generate` and `report`). Commands that are not
+built yet say so and exit; nothing pretends to work.
 
 ## What a .bprelease file is
 
@@ -143,20 +144,58 @@ downstream generates from a draft. Forcing generation from an
 unapproved spec will be possible but permanently recorded as
 unreviewed.
 
+## Step 4: analysis (`bp2uip analyze`)
+
+Everything in this step is pure code over the estate model and the
+specs; no LLM is involved. One command produces two kinds of artifact:
+
+- **Estate-wide** (`artifacts/estate/analysis.json`): a complexity
+  score per process and the dependency graph. The score is a weighted
+  sum over stage counts, decisions, loops, object calls, queue
+  operations, and exception constructs, banded low/medium/high. It is
+  an ordinal ranking with documented weights (`analysis.py`), useful
+  for ordering a migration backlog, and not an effort estimate in
+  days. The dependency graph records which objects and queues each
+  process touches, object fan-in across the estate, and derived
+  producer/consumer edges: if one process adds items to a queue
+  another reads, those processes are coupled even though the source
+  never says so.
+- **Per process** (`artifacts/<process>/uplift.json` plus a derived
+  `uplift.md`): the agentic uplift report. Every behavioral stage is
+  classified `KEEP_DETERMINISTIC`, `AGENTIC_CANDIDATE`, or
+  `HUMAN_GATE` by the rules in `docs/uplift-criteria.md`. The document
+  is authoritative: findings cite its rule IDs, a contract test
+  asserts every emitted ID exists in the document, and the default
+  answer is deterministic, so only the interesting classifications
+  carry argument. The analyzer reads the intent spec too (the reviewed
+  statement of where humans sit in the process becomes the human-gate
+  evidence) and records the spec's status at analysis time, so a
+  report over an unreviewed draft says so.
+
+## The dashboard
+
+A Next.js application in `dashboard/` that renders the pipeline's JSON
+artifacts and computes nothing itself: an estate explorer (complexity
+table plus the queue couplings), a per-process page (score breakdown,
+dependencies, and every stage with its uplift classification), and an
+uplift map (all findings grouped by classification, reasoning and
+criteria shown). Run it with `pnpm dev` from `dashboard/`; if an
+artifact is missing, the page says which pipeline command produces it.
+
 ## Provenance
 
 Every process gets an append-only JSONL log (`provenance.py`). Each
-event (parsed, extraction run, spec drafted, spec approved, later
-generation) carries the sha256 of the previous line, so editing or
-deleting history is detectable. Combined with the file hashes in the
+event (parsed, extraction run, spec drafted, spec approved, uplift
+analyzed, later generation) carries the sha256 of the previous line,
+so editing or deleting history is detectable. Combined with the file hashes in the
 artifacts, any generated output can be traced back through the
 approved spec and the extraction run to the exact source bytes.
 
 ## What is not built yet
 
-Analysis and scoring (week 4), the dashboard (week 4), PDD/SDD
-generation (week 5), and UiPath artifact generation, meaning
-REFramework scaffolding and Maestro BPMN (weeks 6-7). The CLI stubs
+PDD/SDD generation (week 5), the dashboard's intent-review screen
+(week 5), and UiPath artifact generation, meaning REFramework
+scaffolding and Maestro BPMN (weeks 6-7). The CLI stubs
 for these state what they will do and exit. The build logs in
 `docs/build-log/` record week by week what was actually built, what
 broke, and what was decided, including the parts that went wrong.
@@ -167,7 +206,8 @@ broke, and what was decided, including the parts that went wrong.
 |---|---|
 | `fixtures/` | Blue Prism release exports of the fictional Meridian estate |
 | `schema/` | JSON Schemas for every artifact type |
-| `pipeline/src/bp2uip/` | parser, model, intent extraction, providers, provenance, CLI |
+| `pipeline/src/bp2uip/` | parser, model, intent extraction, providers, analysis, provenance, CLI |
 | `pipeline/tests/` | the test suite; fixtures are parsed, never executed |
-| `docs/` | master plan, roadmap, this document, the build logs |
-| `artifacts/` | pipeline output: estate model, intent specs, provenance logs |
+| `docs/` | master plan, roadmap, uplift criteria, this document, the build logs |
+| `artifacts/` | pipeline output: estate model, analysis, intent specs, uplift reports, provenance logs |
+| `dashboard/` | Next.js viewer over `artifacts/` |

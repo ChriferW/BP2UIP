@@ -1,0 +1,130 @@
+{
+  "schema_version": "0.1.0",
+  "process_id": "d7a15694-8ad5-4b31-ab3b-0cde7d46d05f",
+  "spec_ref": {
+    "spec_id": "spec-d7a15694-8ad5-4b31-ab3b-0cde7d46d05f",
+    "status_at_analysis": "approved"
+  },
+  "analyzed_at": "2026-07-21T00:48:59.702758+00:00",
+  "criteria_version": "0.1.0",
+  "findings": [
+    {
+      "id": "uf-01",
+      "stage_ids": [
+        "594a758e-65b9-4b04-a4fe-023799673946",
+        "6950982d-214e-4a1c-b171-1dca50d950a9"
+      ],
+      "classification": "HUMAN_GATE",
+      "reasoning": "The reviewed intent spec identifies a human touchpoint here: \"High-value disputes above the review threshold are routed to a human reviewer via a case created in the case management system, and the automated processing is deferred pending that manual decision\" The handoff stages ('Create Review Case', 'Defer For Review') are the boundary; migration preserves it.",
+      "criteria": [
+        "HG-1"
+      ]
+    },
+    {
+      "id": "uf-02",
+      "stage_ids": [
+        "24056144-c387-4b14-9175-0986250d2f97",
+        "b5bd0a9b-d317-4f94-bf2f-5f72db1f557f",
+        "0928f148-2e2a-400e-add2-e3ded19fd8c8"
+      ],
+      "classification": "HUMAN_GATE",
+      "reasoning": "The reviewed intent spec identifies a human touchpoint here: \"Disputes exceptioned for inactive account, no matching transaction, or repeated posting failures are left on the queue in an exception state, implying a human must investigate and resolve them\" The handoff stages ('Mark Exception - Inactive Account', 'Mark Exception - No Matching Transaction', 'Mark Exception - Posting Failed') are the boundary; migration preserves it.",
+      "criteria": [
+        "HG-1"
+      ]
+    },
+    {
+      "id": "uf-03",
+      "stage_ids": [
+        "151182ff-c1dd-4c91-8f99-8d723d58f92a"
+      ],
+      "classification": "AGENTIC_CANDIDATE",
+      "reasoning": "Decision 'Matches Disputed Transaction?' matches records by exact equality ([Transactions.TxnDate] = [TransactionDate] AND [Transactions.Amount] = [DisputeAmount]), comparing Transactions.Amount, Transactions.TxnDate. Exact matching is brittle against real-world variance; every near miss becomes a human exception. Candidate: agentic matching proposes, deterministic rules dispose, non-exact matches escalate with reasoning attached.",
+      "criteria": [
+        "AC-1"
+      ]
+    },
+    {
+      "id": "uf-04",
+      "stage_ids": [
+        "b874a3a7-20f6-4127-b96d-e1ffb7ee522d"
+      ],
+      "classification": "AGENTIC_CANDIDATE",
+      "reasoning": "Decision 'Amount Over Review Threshold?' routes work to a human gate ('Create Review Case') on a single configured threshold ([DisputeAmount] > [ReviewThreshold]; ReviewThreshold is configuration no stage writes). The threshold is a deterministic proxy for a risk judgment. Candidate: agent-assisted triage that may narrow, never widen, what is auto-processed; the gate itself stays (P-2 keeps the gate stages HUMAN_GATE).",
+      "criteria": [
+        "AC-3",
+        "P-2"
+      ]
+    },
+    {
+      "id": "uf-05",
+      "stage_ids": [
+        "a09522ff-9c4a-4cd2-8213-48fb976f8c28",
+        "d3988932-bc8a-48ca-bd13-502738fb2ae0",
+        "1c4e8603-b736-4cda-ab46-fa9c3fdc030c",
+        "2eb64cbe-3541-4037-8e73-a809bd802dbc",
+        "26663bd5-c9ad-4573-a897-aaf44965722b"
+      ],
+      "classification": "KEEP_DETERMINISTIC",
+      "reasoning": "'Unpack Dispute Item', 'Flag Transaction Found', 'Compute Fee Refund', 'Compute Provisional Credit', 'Increment Retry': deterministic arithmetic and data staging; regulated amounts must not be model-mediated.",
+      "criteria": [
+        "KD-1"
+      ]
+    },
+    {
+      "id": "uf-06",
+      "stage_ids": [
+        "34f316b7-1db0-4f5d-a54e-c016e10888ef",
+        "fd27be17-16cd-4d96-a6aa-43db5c18b122",
+        "4c6d50c6-45a4-4be1-ab4a-056f47c38c74"
+      ],
+      "classification": "KEEP_DETERMINISTIC",
+      "reasoning": "'Lookup Account', 'Get Transactions', 'Post Adjustment': invocations of defined interfaces; the target system's contract does not loosen because a model is upstream.",
+      "criteria": [
+        "KD-2"
+      ]
+    },
+    {
+      "id": "uf-07",
+      "stage_ids": [
+        "2d90b41b-8ed9-4e98-9479-3143fc0f9922",
+        "05ef59fe-8319-4392-aeb5-85d4742ffa7d"
+      ],
+      "classification": "KEEP_DETERMINISTIC",
+      "reasoning": "'Get Next Dispute', 'Mark Dispute Completed': queue mechanics mapping directly to UiPath Orchestrator queue operations.",
+      "criteria": [
+        "KD-3"
+      ]
+    },
+    {
+      "id": "uf-08",
+      "stage_ids": [
+        "4fb557e7-d01a-4f6e-b2d2-ffe06a098d6f",
+        "52b257b3-9cec-4ac9-b153-186174a7a243",
+        "5d5ffd28-409d-4696-9327-24abb0119caf",
+        "41797c85-a14f-41de-b6d6-9a2539bba057",
+        "598b38fb-6e47-48c7-b2f2-e4e8b5a264aa",
+        "d54f39d1-f838-4e35-a4d9-e1d485626492"
+      ],
+      "classification": "KEEP_DETERMINISTIC",
+      "reasoning": "'Item Retrieved?', 'Account Active?', 'For Each Transaction', 'For Each Transaction', 'Transaction Found?', 'Retry Limit Reached?': explicit flow control; the condition is fully stated in the source, there is no judgment to uplift.",
+      "criteria": [
+        "KD-4"
+      ]
+    },
+    {
+      "id": "uf-09",
+      "stage_ids": [
+        "ae41b35a-95b5-4169-9e8f-7a8e44e92ee6",
+        "d79d48e5-ccf7-43b5-8b83-e8b484468ff5",
+        "196f8950-469d-4979-84e0-d352354d7bd5",
+        "286ac884-7ed4-4fdd-9745-69efd5c6af52"
+      ],
+      "classification": "KEEP_DETERMINISTIC",
+      "reasoning": "'Posting Attempt', 'Posting Failed', 'Retry Posting', 'Give Up': exception and retry geometry that becomes REFramework retry configuration and must remain exact.",
+      "criteria": [
+        "KD-5"
+      ]
+    }
+  ]
+}

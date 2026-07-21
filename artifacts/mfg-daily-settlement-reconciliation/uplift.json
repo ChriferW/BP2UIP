@@ -1,0 +1,82 @@
+{
+  "schema_version": "0.1.0",
+  "process_id": "86b65907-a49e-4383-b964-06d2d5f22151",
+  "spec_ref": {
+    "spec_id": "spec-86b65907-a49e-4383-b964-06d2d5f22151",
+    "status_at_analysis": "approved"
+  },
+  "analyzed_at": "2026-07-21T01:09:17.058585+00:00",
+  "criteria_version": "0.1.0",
+  "findings": [
+    {
+      "id": "uf-01",
+      "stage_ids": [
+        "c0dc862e-4fe2-4411-9c35-3e66bb29a879"
+      ],
+      "classification": "HUMAN_GATE",
+      "reasoning": "The reviewed intent spec identifies a human touchpoint here: \"A case is created in the Case Manager system for settlement variances outside tolerance, implying a human reviewer will investigate and resolve the discrepancy.\" The handoff stages ('Create Variance Case') are the boundary; migration preserves it.",
+      "criteria": [
+        "HG-1"
+      ]
+    },
+    {
+      "id": "uf-02",
+      "stage_ids": [
+        "91b7d971-283c-4b24-aecb-3541077f4b74"
+      ],
+      "classification": "HUMAN_GATE",
+      "reasoning": "'Throw Variance Exception': each ends automated handling and leaves the item in a state a person must investigate and resolve.",
+      "criteria": [
+        "HG-2"
+      ]
+    },
+    {
+      "id": "uf-03",
+      "stage_ids": [
+        "a16769bb-fa39-4a02-8e1e-19d9e21d49d7"
+      ],
+      "classification": "AGENTIC_CANDIDATE",
+      "reasoning": "Decision 'Variance Within Tolerance?' routes work to a human gate ('Create Variance Case') on a single configured threshold ([Variance] <= [Tolerance] AND [Variance] >= 0 - [Tolerance]; Tolerance is configuration no stage writes). The threshold is a deterministic proxy for a risk judgment. Candidate: agent-assisted triage that may narrow, never widen, what is auto-processed; the gate itself stays (P-2 keeps the gate stages HUMAN_GATE).",
+      "criteria": [
+        "AC-3",
+        "P-2"
+      ]
+    },
+    {
+      "id": "uf-04",
+      "stage_ids": [
+        "eec3b889-c5a0-4f5d-9c28-7a1cf95c33b6",
+        "6f8a2455-2f21-4964-9406-90a33a544e47",
+        "a9b0960b-c81c-4dbe-b2c1-dbc046052940"
+      ],
+      "classification": "KEEP_DETERMINISTIC",
+      "reasoning": "'Accumulate Total', 'Count Rows', 'Compute Variance': deterministic arithmetic and data staging; regulated amounts must not be model-mediated.",
+      "criteria": [
+        "KD-1"
+      ]
+    },
+    {
+      "id": "uf-05",
+      "stage_ids": [
+        "1ce83645-ef19-45b0-aba7-d0272940942e"
+      ],
+      "classification": "KEEP_DETERMINISTIC",
+      "reasoning": "'Get Settlement Report': invocations of defined interfaces; the target system's contract does not loosen because a model is upstream.",
+      "criteria": [
+        "KD-2"
+      ]
+    },
+    {
+      "id": "uf-06",
+      "stage_ids": [
+        "6f794d92-846d-4576-a507-0580f26fb7e8",
+        "0a8b7a6c-4ed9-45d5-874b-d2e2e7ce57b1"
+      ],
+      "classification": "KEEP_DETERMINISTIC",
+      "reasoning": "'For Each Row', 'For Each Row': explicit flow control; the condition is fully stated in the source, there is no judgment to uplift.",
+      "criteria": [
+        "KD-4"
+      ]
+    }
+  ]
+}

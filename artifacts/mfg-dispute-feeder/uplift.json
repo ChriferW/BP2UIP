@@ -1,0 +1,47 @@
+{
+  "schema_version": "0.1.0",
+  "process_id": "21af9fee-0485-43b2-bde7-9a07a1ee017b",
+  "spec_ref": {
+    "spec_id": "spec-21af9fee-0485-43b2-bde7-9a07a1ee017b",
+    "status_at_analysis": "approved"
+  },
+  "analyzed_at": "2026-07-21T00:48:59.704381+00:00",
+  "criteria_version": "0.1.0",
+  "findings": [
+    {
+      "id": "uf-01",
+      "stage_ids": [
+        "3bb33f23-6442-446c-b9e0-dcc6cffd2fe5",
+        "f58ec21b-4339-435b-b9b0-2515ddcfbdfd"
+      ],
+      "classification": "KEEP_DETERMINISTIC",
+      "reasoning": "'Stage Dsipute Row', 'Count Loaded': deterministic arithmetic and data staging; regulated amounts must not be model-mediated.",
+      "criteria": [
+        "KD-1"
+      ]
+    },
+    {
+      "id": "uf-02",
+      "stage_ids": [
+        "894d2ad9-43a3-4aaf-b8c5-2619419e2ffb"
+      ],
+      "classification": "KEEP_DETERMINISTIC",
+      "reasoning": "'Add Dispute To Queue': queue mechanics mapping directly to UiPath Orchestrator queue operations.",
+      "criteria": [
+        "KD-3"
+      ]
+    },
+    {
+      "id": "uf-03",
+      "stage_ids": [
+        "81d58aea-0719-4f15-b392-c9e4604948f0",
+        "7282aa16-ec45-4a17-a07e-b54a66248ec6"
+      ],
+      "classification": "KEEP_DETERMINISTIC",
+      "reasoning": "'For Each Dispute', 'For Each Dispute': explicit flow control; the condition is fully stated in the source, there is no judgment to uplift.",
+      "criteria": [
+        "KD-4"
+      ]
+    }
+  ]
+}

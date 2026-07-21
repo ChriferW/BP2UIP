@@ -1,0 +1,192 @@
+{
+  "schema_version": "0.1.0",
+  "analyzed_at": "2026-07-21T01:09:17.056807+00:00",
+  "estate_ref": {
+    "path": "artifacts/estate/estate.json",
+    "sha256": "040a1a59dd7e0dd2ad45b786124ef6879c1c0bdffacd3a1c95f998c7a0949795"
+  },
+  "complexity": [
+    {
+      "process_id": "431cbc7f-25f9-4975-8981-72107f1f5288",
+      "process_name": "MFG - Address Change",
+      "stage_count": 7,
+      "logic_stage_count": 4,
+      "decision_count": 1,
+      "branching_depth": 1,
+      "loop_count": 0,
+      "object_call_count": 2,
+      "distinct_objects": [
+        "MFG Core Banking"
+      ],
+      "queue_operation_count": 0,
+      "exception_construct_count": 1,
+      "exception_density": 0.25,
+      "score": 11,
+      "band": "low"
+    },
+    {
+      "process_id": "d7a15694-8ad5-4b31-ab3b-0cde7d46d05f",
+      "process_name": "MFG - Card Dispute Intake",
+      "stage_count": 29,
+      "logic_stage_count": 27,
+      "decision_count": 6,
+      "branching_depth": 5,
+      "loop_count": 1,
+      "object_call_count": 4,
+      "distinct_objects": [
+        "MFG Case Manager",
+        "MFG Core Banking"
+      ],
+      "queue_operation_count": 6,
+      "exception_construct_count": 5,
+      "exception_density": 0.185,
+      "score": 66,
+      "band": "high"
+    },
+    {
+      "process_id": "86b65907-a49e-4383-b964-06d2d5f22151",
+      "process_name": "MFG - Daily Settlement Reconciliation",
+      "stage_count": 11,
+      "logic_stage_count": 9,
+      "decision_count": 1,
+      "branching_depth": 1,
+      "loop_count": 1,
+      "object_call_count": 2,
+      "distinct_objects": [
+        "MFG Case Manager",
+        "MFG Core Banking"
+      ],
+      "queue_operation_count": 0,
+      "exception_construct_count": 1,
+      "exception_density": 0.111,
+      "score": 18,
+      "band": "medium"
+    },
+    {
+      "process_id": "21af9fee-0485-43b2-bde7-9a07a1ee017b",
+      "process_name": "MFG - Dispute Feeder",
+      "stage_count": 7,
+      "logic_stage_count": 5,
+      "decision_count": 0,
+      "branching_depth": 0,
+      "loop_count": 1,
+      "object_call_count": 0,
+      "distinct_objects": [],
+      "queue_operation_count": 1,
+      "exception_construct_count": 0,
+      "exception_density": 0.0,
+      "score": 8,
+      "band": "low"
+    }
+  ],
+  "dependencies": {
+    "processes": [
+      {
+        "process_id": "431cbc7f-25f9-4975-8981-72107f1f5288",
+        "process_name": "MFG - Address Change",
+        "objects": [
+          {
+            "object": "MFG Core Banking",
+            "actions": [
+              "Lookup Account",
+              "Update Account Status"
+            ]
+          }
+        ],
+        "queues": [],
+        "subprocesses": []
+      },
+      {
+        "process_id": "d7a15694-8ad5-4b31-ab3b-0cde7d46d05f",
+        "process_name": "MFG - Card Dispute Intake",
+        "objects": [
+          {
+            "object": "MFG Case Manager",
+            "actions": [
+              "Create Case"
+            ]
+          },
+          {
+            "object": "MFG Core Banking",
+            "actions": [
+              "Get Transactions",
+              "Lookup Account",
+              "Post Adjustment"
+            ]
+          }
+        ],
+        "queues": [
+          {
+            "queue": "Q-Disputes",
+            "reads": 1,
+            "adds": 0,
+            "dispositions": 5
+          }
+        ],
+        "subprocesses": []
+      },
+      {
+        "process_id": "86b65907-a49e-4383-b964-06d2d5f22151",
+        "process_name": "MFG - Daily Settlement Reconciliation",
+        "objects": [
+          {
+            "object": "MFG Case Manager",
+            "actions": [
+              "Create Case"
+            ]
+          },
+          {
+            "object": "MFG Core Banking",
+            "actions": [
+              "Get Transactions"
+            ]
+          }
+        ],
+        "queues": [],
+        "subprocesses": []
+      },
+      {
+        "process_id": "21af9fee-0485-43b2-bde7-9a07a1ee017b",
+        "process_name": "MFG - Dispute Feeder",
+        "objects": [],
+        "queues": [
+          {
+            "queue": "Q-Disputes",
+            "reads": 0,
+            "adds": 1,
+            "dispositions": 0
+          }
+        ],
+        "subprocesses": []
+      }
+    ],
+    "object_fan_in": [
+      {
+        "object": "MFG Case Manager",
+        "used_by": [
+          "d7a15694-8ad5-4b31-ab3b-0cde7d46d05f",
+          "86b65907-a49e-4383-b964-06d2d5f22151"
+        ]
+      },
+      {
+        "object": "MFG Core Banking",
+        "used_by": [
+          "431cbc7f-25f9-4975-8981-72107f1f5288",
+          "d7a15694-8ad5-4b31-ab3b-0cde7d46d05f",
+          "86b65907-a49e-4383-b964-06d2d5f22151"
+        ]
+      }
+    ],
+    "queue_couplings": [
+      {
+        "queue": "Q-Disputes",
+        "producers": [
+          "21af9fee-0485-43b2-bde7-9a07a1ee017b"
+        ],
+        "consumers": [
+          "d7a15694-8ad5-4b31-ab3b-0cde7d46d05f"
+        ]
+      }
+    ]
+  }
+}
