@@ -1,10 +1,10 @@
 """The bp2uip command line interface.
 
-`parse` (roadmap week 2), `extract`, `review` (roadmap week 3), and
-`analyze` (roadmap week 4) are implemented. Every other subcommand is
-still a stub: it parses its
-arguments, states what it will do and which roadmap week implements
-it, and exits 0. No fake output, no fake progress.
+`parse` (roadmap week 2), `extract`, `review` (roadmap week 3),
+`analyze` (roadmap week 4), `generate` for PDD/SDD, and `report`
+(roadmap week 5) are implemented. The remaining stubs (`generate
+--xaml`, `--bpmn`) state what they will do and which roadmap week
+implements them, then exit. No fake output, no fake progress.
 """
 
 import argparse
@@ -16,9 +16,32 @@ from pathlib import Path
 
 from dotenv import find_dotenv, load_dotenv
 
+from bp2uip import __version__
 from bp2uip.analysis import analyze_estate, analyze_uplift
+from bp2uip.docsgen import (
+    GeneratedDoc,
+    GenerationError,
+    generate_pdd,
+    generate_report,
+    generate_sdd,
+)
+from bp2uip.gate import UnapprovedSpecError
 from bp2uip.intent import ExtractionError, approve_spec, extract_intent, find_process
-from bp2uip.model import Estate, EstateRef, IntentSpec, to_document
+from bp2uip.model import (
+    SCHEMA_VERSION,
+    Estate,
+    EstateRef,
+    FileRef,
+    FileRefVersioned,
+    IntentSpec,
+    Manifest,
+    ManifestArtifacts,
+    ProvenanceRef,
+    SpecArtifactRef,
+    UpliftReport,
+    to_document,
+    utc_now,
+)
 from bp2uip.parser import ParseError, parse_release
 from bp2uip.provenance import ProvenanceLog
 from bp2uip.providers import ProviderConfigError, get_provider
@@ -238,37 +261,181 @@ def _cmd_analyze(args: argparse.Namespace) -> int:
     return 1 if failed else 0
 
 
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _write_manifest(
+    out_dir: Path, process, estate_path: Path, spec: IntentSpec, spec_path: Path
+) -> Path:
+    """Regenerate the process manifest from what actually exists on disk;
+    the manifest never claims an artifact that does not exist."""
+    uplift_path = out_dir / "uplift.json"
+    provenance_path = out_dir / "provenance.jsonl"
+    pdd_path = out_dir / "pdd.md"
+    sdd_path = out_dir / "sdd.md"
+    uplift = (
+        UpliftReport.model_validate_json(uplift_path.read_text(encoding="utf-8"))
+        if uplift_path.exists()
+        else None
+    )
+    manifest = Manifest(
+        process_id=process.id,
+        process_name=process.name,
+        generated_at=utc_now(),
+        pipeline_version=__version__,
+        artifacts=ManifestArtifacts(
+            estate=FileRefVersioned(
+                path=str(estate_path), sha256=_sha256(estate_path), schema_version=SCHEMA_VERSION
+            ),
+            intent_spec=SpecArtifactRef(
+                path=str(spec_path),
+                sha256=_sha256(spec_path),
+                schema_version=spec.schema_version,
+                status=spec.status,
+            ),
+            uplift=FileRefVersioned(
+                path=str(uplift_path),
+                sha256=_sha256(uplift_path),
+                schema_version=uplift.schema_version,
+            )
+            if uplift
+            else None,
+            provenance=ProvenanceRef(
+                path=str(provenance_path),
+                events=len(provenance_path.read_text(encoding="utf-8").splitlines()),
+            )
+            if provenance_path.exists()
+            else None,
+            pdd=FileRef(path=str(pdd_path), sha256=_sha256(pdd_path))
+            if pdd_path.exists()
+            else None,
+            sdd=FileRef(path=str(sdd_path), sha256=_sha256(sdd_path))
+            if sdd_path.exists()
+            else None,
+        ),
+    )
+    manifest_path = out_dir / "manifest.json"
+    manifest_path.write_text(json.dumps(to_document(manifest), indent=2) + "\n", encoding="utf-8")
+    return manifest_path
+
+
 def _cmd_generate(args: argparse.Namespace) -> int:
-    targets = [
-        name
-        for name, wanted in [
-            ("pdd", args.pdd),
-            ("sdd", args.sdd),
-            ("xaml", args.xaml),
-            ("bpmn", args.bpmn),
-        ]
-        if wanted
-    ] or ["pdd", "sdd"]
-    forced = (
-        " --force is set: the run would be recorded in provenance as an unreviewed generation."
-        if args.force
-        else ""
-    )
-    print(
-        f"generate: not implemented yet (roadmap weeks 5-7). Will generate "
-        f"{', '.join(targets)} for process '{args.process}' from its approved "
-        f"intent spec; refuses to run on a draft.{forced}"
-    )
+    for stub in ("xaml", "bpmn"):
+        if getattr(args, stub):
+            print(
+                f"generate: --{stub} is not implemented yet (roadmap weeks 6-7). "
+                f"Will emit UiPath artifacts from the approved intent spec."
+            )
+    doc_targets = [n for n, wanted in [("pdd", args.pdd), ("sdd", args.sdd)] if wanted]
+    if not doc_targets and not (args.xaml or args.bpmn):
+        doc_targets = ["pdd", "sdd"]
+    if not doc_targets:
+        return 0
+
+    estate_path = Path(args.estate)
+    if not estate_path.exists():
+        print(f"generate: estate document not found at {estate_path}; run `bp2uip parse` first")
+        return 1
+    estate = Estate.model_validate_json(estate_path.read_bytes())
+    try:
+        process = find_process(estate, args.process)
+    except ExtractionError as exc:
+        print(f"generate: {exc}")
+        return 1
+    out_dir = Path(args.out) / _slug(process.name)
+    spec_path = out_dir / "intent-spec.json"
+    if not spec_path.exists():
+        print(f"generate: no intent spec at {spec_path}; run `bp2uip extract` first")
+        return 1
+    spec = IntentSpec.model_validate_json(spec_path.read_text(encoding="utf-8"))
+    log = ProvenanceLog.open(out_dir / "provenance.jsonl", process.id)
+
+    uplift = None
+    if "sdd" in doc_targets:
+        uplift_path = out_dir / "uplift.json"
+        if not uplift_path.exists():
+            print(f"generate: the SDD needs {uplift_path}; run `bp2uip analyze` first")
+            return 1
+        uplift = UpliftReport.model_validate_json(uplift_path.read_text(encoding="utf-8"))
+
+    docs: list[tuple[str, GeneratedDoc]] = []
+    try:
+        if "pdd" in doc_targets:
+            docs.append(("pdd", generate_pdd(estate, spec, log, out_dir=out_dir, force=args.force)))
+        if "sdd" in doc_targets:
+            assert uplift is not None
+            docs.append(
+                (
+                    "sdd",
+                    generate_sdd(estate, spec, uplift, log, out_dir=out_dir, force=args.force),
+                )
+            )
+    except UnapprovedSpecError as exc:
+        print(f"generate: {exc}")
+        return 1
+    except GenerationError as exc:
+        print(f"generate: {exc}")
+        return 1
+
+    for kind, doc in docs:
+        print(f"generate: {kind} for '{process.name}' -> {doc.markdown_path}")
+        if doc.docx_path is not None:
+            print(f"generate: {kind} DOCX -> {doc.docx_path}")
+    if docs and docs[0][1].docx_path is None:
+        print("generate: pandoc not found; DOCX skipped, markdown only")
+    manifest_path = _write_manifest(out_dir, process, estate_path, spec, spec_path)
+    print(f"generate: manifest -> {manifest_path}")
     return 0
 
 
 def _cmd_report(args: argparse.Namespace) -> int:
-    scope = f"process '{args.process}'" if args.process else "the whole estate"
-    print(
-        f"report: not implemented yet (roadmap week 5). Will generate the "
-        f"modernization report for {scope}: complexity, uplift findings, "
-        f"migration recommendation."
+    estate_path = Path(args.estate)
+    if not estate_path.exists():
+        print(f"report: estate document not found at {estate_path}; run `bp2uip parse` first")
+        return 1
+    estate = Estate.model_validate_json(estate_path.read_bytes())
+    if args.process:
+        try:
+            processes = [find_process(estate, args.process)]
+        except ExtractionError as exc:
+            print(f"report: {exc}")
+            return 1
+    else:
+        processes = estate.processes
+
+    out = Path(args.out)
+    specs: list[IntentSpec] = []
+    uplift_reports: list[UpliftReport] = []
+    for process in processes:
+        process_dir = out / _slug(process.name)
+        spec_path = process_dir / "intent-spec.json"
+        if spec_path.exists():
+            specs.append(IntentSpec.model_validate_json(spec_path.read_text(encoding="utf-8")))
+        uplift_path = process_dir / "uplift.json"
+        if uplift_path.exists():
+            uplift_reports.append(
+                UpliftReport.model_validate_json(uplift_path.read_text(encoding="utf-8"))
+            )
+
+    report_estate = (
+        estate
+        if not args.process
+        else Estate.model_validate(
+            {**to_document(estate), "processes": [to_document(p) for p in processes]}
+        )
     )
+    doc = generate_report(report_estate, specs, uplift_reports, out_dir=out / "estate")
+    for process in processes:
+        process_dir = out / _slug(process.name)
+        if (process_dir / "provenance.jsonl").exists():
+            log = ProvenanceLog.open(process_dir / "provenance.jsonl", process.id)
+            log.append(
+                actor="bp2uip/docsgen",
+                event="report_generated",
+                detail={"path": str(doc.markdown_path)},
+            )
+    print(f"report: modernization report for {len(processes)} process(es) -> {doc.markdown_path}")
     return 0
 
 
@@ -327,10 +494,22 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="generate from an unapproved spec; recorded in provenance as an unreviewed generation",
     )
+    p.add_argument(
+        "--estate",
+        default="artifacts/estate/estate.json",
+        help="estate document produced by `bp2uip parse`",
+    )
+    p.add_argument("-o", "--out", default="artifacts", help="artifact output directory")
     p.set_defaults(func=_cmd_generate)
 
     p = sub.add_parser("report", help="generate the modernization report")
     p.add_argument("process", nargs="?", help="limit to one process")
+    p.add_argument(
+        "--estate",
+        default="artifacts/estate/estate.json",
+        help="estate document produced by `bp2uip parse`",
+    )
+    p.add_argument("-o", "--out", default="artifacts", help="artifact output directory")
     p.set_defaults(func=_cmd_report)
 
     return parser

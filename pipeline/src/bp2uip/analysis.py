@@ -259,7 +259,7 @@ _DOTTED_EQ = re.compile(r"\[[^\]]+\.[^\]]+\]\s*=[^=]|[^<>=]=\s*\[[^\]]+\.[^\]]+\
 _DOTTED_REF = re.compile(r"\[([^\].]+)\.([^\]]+)\]")
 
 
-def _config_constants(process: Process) -> set[str]:
+def config_constants(process: Process) -> set[str]:
     """Data items with a non-empty scalar initial value that no stage
     writes (docs/uplift-criteria.md AC-3)."""
     written: set[str] = set()
@@ -394,7 +394,7 @@ def analyze_uplift(estate: Estate, spec: IntentSpec) -> UpliftReport:
         )
 
     # AC-3: threshold-only triage into a human gate.
-    config = _config_constants(process)
+    config = config_constants(process)
     hg_stages = {sid for f in findings if f.classification == "HUMAN_GATE" for sid in f.stage_ids}
     for stage in unclaimed(lambda s: s.type == "decision"):
         expression = str(stage.properties.get("expression", ""))

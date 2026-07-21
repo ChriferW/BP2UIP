@@ -12,10 +12,8 @@ from conftest import good_extraction_response
 FIXTURES = Path(__file__).resolve().parents[2] / "fixtures"
 
 STUB_INVOCATIONS = [
-    ["generate", "proc-dispute-intake", "--pdd", "--sdd"],
-    ["generate", "proc-dispute-intake", "--force"],
-    ["report"],
-    ["report", "proc-dispute-intake"],
+    ["generate", "proc-dispute-intake", "--xaml"],
+    ["generate", "proc-dispute-intake", "--bpmn"],
 ]
 
 
@@ -34,8 +32,9 @@ def test_approve_without_reviewer_identity_is_rejected(capsys):
     assert "never inferred" in capsys.readouterr().err
 
 
-def test_forced_generation_states_it_is_recorded(capsys):
-    main(["generate", "proc-x", "--force"])
+def test_generate_help_states_force_is_recorded(capsys):
+    with pytest.raises(SystemExit):
+        main(["generate", "--help"])
     assert "unreviewed generation" in capsys.readouterr().out
 
 
@@ -217,3 +216,93 @@ def test_analyze_skips_processes_without_specs(parsed_out, capsys):
 def test_analyze_named_process_without_spec_fails(parsed_out, capsys):
     assert _analyze(parsed_out, process="MFG - Address Change") == 1
     assert "uplift analysis skipped" in capsys.readouterr().out
+
+
+# --------------------------------------------------------------------------
+# generate and report (week 5)
+# --------------------------------------------------------------------------
+
+
+def _common_args(parsed_out):
+    return ["--estate", str(parsed_out / "estate" / "estate.json"), "--out", str(parsed_out)]
+
+
+def _generate(parsed_out, *flags):
+    return main(["generate", "MFG - Address Change", *flags, *_common_args(parsed_out)])
+
+
+@pytest.fixture
+def approved_out(parsed_out, monkeypatch, capsys):
+    """Artifact dir with an extracted, approved, analyzed P03 spec."""
+    assert _extract_p03(parsed_out, monkeypatch) == 0
+    spec_path = parsed_out / "mfg-address-change" / "intent-spec.json"
+    assert main(["review", str(spec_path), "--approve", "--by", "Chris Williams"]) == 0
+    assert _analyze(parsed_out) == 0
+    capsys.readouterr()
+    return parsed_out
+
+
+def test_generate_writes_pdd_sdd_and_manifest(approved_out, capsys):
+    assert _generate(approved_out) == 0
+    out = capsys.readouterr().out
+    assert "not implemented" not in out
+    spec_dir = approved_out / "mfg-address-change"
+    assert "# Process Definition Document" in (spec_dir / "pdd.md").read_text(encoding="utf-8")
+    assert "# Solution Design Document" in (spec_dir / "sdd.md").read_text(encoding="utf-8")
+    manifest = json.loads((spec_dir / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["artifacts"]["intent_spec"]["status"] == "approved"
+    assert manifest["artifacts"]["pdd"]["path"].endswith("pdd.md")
+    assert manifest["artifacts"]["sdd"]["sha256"]
+    assert manifest["artifacts"]["provenance"]["events"] >= 5
+    log = ProvenanceLog.open(spec_dir / "provenance.jsonl", manifest["process_id"])
+    assert log.verify()
+    assert [e.event for e in log.events()][-2:] == ["generation", "generation"]
+
+
+def test_generate_refuses_draft_and_writes_nothing(parsed_out, monkeypatch, capsys):
+    assert _extract_p03(parsed_out, monkeypatch) == 0
+    assert _analyze(parsed_out) == 0
+    capsys.readouterr()
+    assert _generate(parsed_out) == 1
+    assert "refuses to run" in capsys.readouterr().out
+    spec_dir = parsed_out / "mfg-address-change"
+    assert not (spec_dir / "pdd.md").exists()
+    assert not (spec_dir / "manifest.json").exists()
+
+
+def test_generate_force_on_draft_is_recorded(parsed_out, monkeypatch, capsys):
+    assert _extract_p03(parsed_out, monkeypatch) == 0
+    assert _analyze(parsed_out) == 0
+    capsys.readouterr()
+    assert _generate(parsed_out, "--force") == 0
+    spec_dir = parsed_out / "mfg-address-change"
+    assert (spec_dir / "pdd.md").exists()
+    spec = json.loads((spec_dir / "intent-spec.json").read_text(encoding="utf-8"))
+    log = ProvenanceLog.open(spec_dir / "provenance.jsonl", spec["process_id"])
+    assert log.verify()
+    assert "unreviewed_generation" in [e.event for e in log.events()]
+    manifest = json.loads((spec_dir / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["artifacts"]["intent_spec"]["status"] == "draft"
+
+
+def test_generate_sdd_without_analysis_says_run_analyze(parsed_out, monkeypatch, capsys):
+    assert _extract_p03(parsed_out, monkeypatch) == 0
+    spec_path = parsed_out / "mfg-address-change" / "intent-spec.json"
+    assert main(["review", str(spec_path), "--approve", "--by", "Chris Williams"]) == 0
+    capsys.readouterr()
+    assert _generate(parsed_out, "--sdd") == 1
+    assert "run `bp2uip analyze` first" in capsys.readouterr().out
+
+
+def test_report_writes_modernization_report_and_events(approved_out, capsys):
+    assert main(["report", *_common_args(approved_out)]) == 0
+    out = capsys.readouterr().out
+    assert "not implemented" not in out
+    report = (approved_out / "estate" / "modernization-report.md").read_text(encoding="utf-8")
+    assert "# Modernization report" in report
+    assert "MFG - Address Change" in report
+    spec_dir = approved_out / "mfg-address-change"
+    spec = json.loads((spec_dir / "intent-spec.json").read_text(encoding="utf-8"))
+    log = ProvenanceLog.open(spec_dir / "provenance.jsonl", spec["process_id"])
+    assert log.verify()
+    assert [e.event for e in log.events()][-1] == "report_generated"

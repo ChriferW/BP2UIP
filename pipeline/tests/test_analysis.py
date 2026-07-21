@@ -14,52 +14,14 @@ from bp2uip.analysis import (
     build_dependency_graph,
     score_complexity,
 )
-from bp2uip.model import (
-    Estate,
-    EstateRef,
-    Extraction,
-    HumanTouchpoint,
-    IntentSpec,
-    Process,
-    PurposeSection,
-    utc_now,
-)
+from bp2uip.model import Estate, Process
+from conftest import make_spec, stage_id
 
 CRITERIA_DOC = Path(__file__).resolve().parents[2] / "docs" / "uplift-criteria.md"
 
 
 def _process(estate: Estate, name: str) -> Process:
     return next(p for p in estate.processes if p.name == name)
-
-
-def _stage_id(process: Process, name: str) -> str:
-    return next(s.id for s in process.stages if s.name == name)
-
-
-def _spec_for(process: Process, touchpoints: list[tuple[str, list[str]]]) -> IntentSpec:
-    """A minimal spec for a parsed process; touchpoints are
-    (description, [stage names]) pairs."""
-    return IntentSpec(
-        spec_id=f"spec-{process.id}",
-        process_id=process.id,
-        estate_ref=EstateRef(path="artifacts/estate/estate.json", sha256="0" * 64),
-        status="draft",
-        created_at=utc_now(),
-        extraction=Extraction(provider="fake", model="fake-model", prompt_version="0.1.0"),
-        purpose=PurposeSection(text="Test.", citations=[process.stages[0].id]),
-        inputs=[],
-        outputs=[],
-        business_rules=[],
-        exception_semantics=[],
-        human_touchpoints=[
-            HumanTouchpoint(
-                description=description,
-                citations=[_stage_id(process, n) for n in names],
-            )
-            for description, names in touchpoints
-        ],
-        approval=None,
-    )
 
 
 @pytest.fixture(scope="module")
@@ -69,7 +31,7 @@ def p01(full_estate) -> Process:
 
 @pytest.fixture(scope="module")
 def p01_report(full_estate, p01):
-    spec = _spec_for(
+    spec = make_spec(
         p01,
         [
             (
@@ -171,30 +133,30 @@ def test_every_behavioral_stage_lands_in_exactly_one_finding(p01, p01_report):
 
 
 def test_spec_touchpoint_handoffs_become_human_gates(p01, p01_report):
-    case = _finding_for(p01_report, _stage_id(p01, "Create Review Case"))
+    case = _finding_for(p01_report, stage_id(p01, "Create Review Case"))
     assert case.classification == "HUMAN_GATE"
     assert case.criteria == ["HG-1"]
-    assert _stage_id(p01, "Defer For Review") in case.stage_ids
+    assert stage_id(p01, "Defer For Review") in case.stage_ids
     # The cited decision stage is routing evidence, not the handoff.
-    assert _stage_id(p01, "Amount Over Review Threshold?") not in case.stage_ids
+    assert stage_id(p01, "Amount Over Review Threshold?") not in case.stage_ids
 
 
 def test_unnamed_exception_dispositions_become_human_gates(p01, p01_report):
-    finding = _finding_for(p01_report, _stage_id(p01, "Mark Exception - Inactive Account"))
+    finding = _finding_for(p01_report, stage_id(p01, "Mark Exception - Inactive Account"))
     assert finding.classification == "HUMAN_GATE"
     assert finding.criteria == ["HG-2"]
-    assert _stage_id(p01, "Mark Exception - Posting Failed") in finding.stage_ids
+    assert stage_id(p01, "Mark Exception - Posting Failed") in finding.stage_ids
 
 
 def test_exact_match_reconciliation_is_agentic_candidate(p01, p01_report):
-    finding = _finding_for(p01_report, _stage_id(p01, "Matches Disputed Transaction?"))
+    finding = _finding_for(p01_report, stage_id(p01, "Matches Disputed Transaction?"))
     assert finding.classification == "AGENTIC_CANDIDATE"
     assert finding.criteria == ["AC-1"]
     assert "Transactions.TxnDate" in finding.reasoning
 
 
 def test_threshold_triage_into_human_gate_is_agentic_candidate(p01, p01_report):
-    finding = _finding_for(p01_report, _stage_id(p01, "Amount Over Review Threshold?"))
+    finding = _finding_for(p01_report, stage_id(p01, "Amount Over Review Threshold?"))
     assert finding.classification == "AGENTIC_CANDIDATE"
     assert "AC-3" in finding.criteria
     assert "ReviewThreshold" in finding.reasoning
@@ -203,21 +165,21 @@ def test_threshold_triage_into_human_gate_is_agentic_candidate(p01, p01_report):
 def test_retry_limit_decision_stays_deterministic(p01, p01_report):
     # Compares against configuration (MaxPostAttempts) but routes to
     # resume stages, not a human gate, so AC-3 must not fire.
-    finding = _finding_for(p01_report, _stage_id(p01, "Retry Limit Reached?"))
+    finding = _finding_for(p01_report, stage_id(p01, "Retry Limit Reached?"))
     assert finding.classification == "KEEP_DETERMINISTIC"
     assert finding.criteria == ["KD-4"]
 
 
 def test_money_writes_stay_deterministic(p01, p01_report):
-    finding = _finding_for(p01_report, _stage_id(p01, "Post Adjustment"))
+    finding = _finding_for(p01_report, stage_id(p01, "Post Adjustment"))
     assert finding.classification == "KEEP_DETERMINISTIC"
     assert finding.criteria == ["KD-2"]
 
 
 def test_business_exception_is_human_gate_without_spec_touchpoints(p03_estate):
     process = p03_estate.processes[0]
-    report = analyze_uplift(p03_estate, _spec_for(process, []))
-    finding = _finding_for(report, _stage_id(process, "Throw Inactive Account"))
+    report = analyze_uplift(p03_estate, make_spec(process, []))
+    finding = _finding_for(report, stage_id(process, "Throw Inactive Account"))
     assert finding.classification == "HUMAN_GATE"
     assert finding.criteria == ["HG-2"]
 
@@ -228,7 +190,7 @@ def test_report_records_spec_status_and_criteria_version(p01_report):
 
 
 def test_unknown_process_raises(full_estate, p01):
-    spec = _spec_for(p01, [])
+    spec = make_spec(p01, [])
     spec = spec.model_copy(update={"process_id": "proc-nonexistent"})
     with pytest.raises(ValueError, match="not in the estate"):
         analyze_uplift(full_estate, spec)
@@ -242,7 +204,7 @@ def test_unknown_process_raises(full_estate, p01):
 def test_every_emitted_criteria_id_exists_in_the_document(full_estate, p01_report, p03_estate):
     doc = CRITERIA_DOC.read_text(encoding="utf-8")
     documented = set(re.findall(r"\*\*((?:P|KD|AC|HG)-\d+)", doc))
-    p03_report = analyze_uplift(p03_estate, _spec_for(p03_estate.processes[0], []))
+    p03_report = analyze_uplift(p03_estate, make_spec(p03_estate.processes[0], []))
     emitted = {
         rule
         for report in (p01_report, p03_report)

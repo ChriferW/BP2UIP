@@ -59,11 +59,12 @@ def _uplift_report(spec):
     )
 
 
-def test_docsgen_refuses_draft_even_when_called_directly(draft_spec, log):
+def test_docsgen_refuses_draft_even_when_called_directly(draft_spec, log, tmp_path):
     with pytest.raises(UnapprovedSpecError):
-        docsgen.generate_pdd(None, draft_spec, log)
+        docsgen.generate_pdd(None, draft_spec, log, out_dir=tmp_path)
     with pytest.raises(UnapprovedSpecError):
-        docsgen.generate_sdd(None, draft_spec, _uplift_report(draft_spec), log)
+        docsgen.generate_sdd(None, draft_spec, _uplift_report(draft_spec), log, out_dir=tmp_path)
+    assert list(tmp_path.iterdir()) == []  # refusal writes nothing
 
 
 def test_emitters_refuse_draft_even_when_called_directly(draft_spec, log):
@@ -73,11 +74,11 @@ def test_emitters_refuse_draft_even_when_called_directly(draft_spec, log):
         emitters.emit_bpmn(draft_spec, log)
 
 
-def test_generators_pass_the_gate_on_approved_spec(draft_spec, log):
+def test_emitters_pass_the_gate_on_approved_spec(draft_spec, log):
     # With an approved spec the gate passes and only the unimplemented
-    # generation remains, proving the refusal above comes from the gate.
+    # emission remains, proving the refusal above comes from the gate.
+    # (docsgen is implemented; its gate passage is covered in
+    # test_docsgen.py against a real estate.)
     approved = approve_spec(draft_spec, approved_by="Test Reviewer", log=log)
-    with pytest.raises(NotImplementedError):
-        docsgen.generate_pdd(None, approved, log)
     with pytest.raises(NotImplementedError):
         emitters.emit_bpmn(approved, log)
